@@ -9,7 +9,7 @@ formal releases begin.
 ### Added
 
 - Comprehensive project, installation, usage, testing, dataset, security,
-  contribution, troubleshooting, and roadmap documentation
+  troubleshooting, and roadmap documentation
 
 ### Changed
 

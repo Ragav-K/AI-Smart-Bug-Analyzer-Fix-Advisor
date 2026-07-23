@@ -66,10 +66,8 @@ flowchart LR
 | [Testing](TESTING.md) | Unit tests and evaluation suite |
 | [Troubleshooting](TROUBLESHOOTING.md) | Common setup and runtime problems |
 | [Roadmap](ROADMAP.md) | Planned improvements |
-| [Contributing](CONTRIBUTING.md) | Contribution workflow and standards |
 | [Security](SECURITY.md) | Vulnerability reporting and data-handling notes |
 | [Changelog](CHANGELOG.md) | Notable project changes |
-| [Code of Conduct](CODE_OF_CONDUCT.md) | Community expectations |
 
 ## Runtime data
 
