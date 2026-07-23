@@ -6,25 +6,20 @@ from typing import Any
 def validate_submission(record: dict[str, Any]) -> list[str]:
     """Validate the user-facing bug submission form."""
     errors: list[str] = []
+    has_uploaded_files = bool(record.get("uploaded_files"))
+    submission_method = str(record.get("submission_method") or "").strip()
+    requires_text = submission_method in {"Text", "Text + File"}
+    requires_file = submission_method in {"File", "Text + File"}
 
-    if not record.get("project_name", "").strip():
-        errors.append("Project Name is required.")
-    if not record.get("bug_title", "").strip():
+    # Preserve the previous conditional rule for callers that do not yet send a method.
+    if not submission_method:
+        requires_text = not has_uploaded_files
+
+    if requires_text and not str(record.get("bug_title") or "").strip():
         errors.append("Bug Title is required.")
-    if not record.get("bug_description", "").strip():
+    if requires_text and not str(record.get("bug_description") or "").strip():
         errors.append("Bug Description is required.")
-
-    has_evidence = any(
-        [
-            record.get("stack_trace", "").strip(),
-            record.get("error_logs", "").strip(),
-            record.get("uploaded_files"),
-            record.get("screenshot"),
-        ]
-    )
-    if not has_evidence:
-        errors.append(
-            "Add at least one evidence item: Stack Trace, Error Log, Uploaded File, or Screenshot."
-        )
+    if requires_file and not has_uploaded_files:
+        errors.append("At least one supporting file is required.")
 
     return errors

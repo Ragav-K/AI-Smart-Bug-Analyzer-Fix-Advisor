@@ -1,136 +1,97 @@
 from __future__ import annotations
 
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import pandas as pd
 import streamlit as st
-from PIL import Image
 
-from utils.helpers import (
-    as_bool_label,
-    format_file_size,
-    load_css,
-    readable_timestamp,
-    severity_badge_class,
+from agents.orchestrator import BugAnalysisOrchestrator
+from utils.helpers import format_file_size, load_css
+from utils.rag_search import (
+    MODEL_NAME,
+    extract_uploaded_text,
+    get_vector_collection,
+    is_vector_index_ready,
+    search_similar_bugs,
 )
 from utils.storage import (
     ensure_project_structure,
     generate_submission_id,
-    load_reports,
     save_report,
     save_uploaded_file,
 )
 from utils.validators import validate_submission
 
 
-LANGUAGES = [
-    "Python",
-    "Java",
-    "C",
-    "C++",
-    "JavaScript",
-    "TypeScript",
-    "Go",
-    "Rust",
-    "PHP",
-    "Ruby",
-    "Other",
+FILE_TYPES = [
+    "txt",
+    "log",
+    "pdf",
+    "docx",
+    "png",
+    "jpg",
+    "jpeg",
+    "zip",
+    "java",
+    "py",
+    "js",
+    "ts",
+    "cpp",
+    "json",
+    "xml",
 ]
-
-FRAMEWORKS = [
-    "None",
-    "React",
-    "Angular",
-    "Vue",
-    "Spring Boot",
-    "Django",
-    "Flask",
-    "FastAPI",
-    "Express",
-    "Node.js",
-    "ASP.NET",
-    "Other",
-]
-
-OPERATING_SYSTEMS = ["Windows", "Linux", "macOS", "Android", "iOS", "Other"]
-SEVERITIES = ["Critical", "High", "Medium", "Low"]
-FILE_TYPES = ["txt", "log", "csv", "json", "xml", "pdf", "docx", "zip"]
-SCREENSHOT_TYPES = ["png", "jpg", "jpeg"]
 
 
 def render_bug_submission() -> None:
-    """Render Module 1: Bug Submission."""
+    """Render bug submission, RAG search, and automatic multi-agent analysis."""
     ensure_project_structure()
     configure_page()
-    render_sidebar()
     render_header()
-    render_future_module_strip()
+    render_knowledge_base_status()
 
-    if "submitted_reports" not in st.session_state:
-        st.session_state.submitted_reports = load_reports()
     if "last_submission" not in st.session_state:
         st.session_state.last_submission = None
+    if "analysis_history" not in st.session_state:
+        st.session_state.analysis_history = []
 
     render_submission_form()
 
     if st.session_state.last_submission:
-        render_confirmation(st.session_state.last_submission)
-
-    render_history(st.session_state.submitted_reports)
-    render_footer()
-
+        render_results(st.session_state.last_submission)
 
 def configure_page() -> None:
     st.set_page_config(
         page_title="AI Smart Bug Analyzer & Fix Advisor",
         page_icon="BUG",
         layout="wide",
-        initial_sidebar_state="expanded",
+        initial_sidebar_state="collapsed",
     )
     css = load_css()
     if css:
         st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 
-def render_sidebar() -> None:
-    with st.sidebar:
-        st.markdown('<div class="sidebar-brand">Bug Analyzer</div>', unsafe_allow_html=True)
-        st.markdown('<div class="sidebar-caption">Module Navigation</div>', unsafe_allow_html=True)
+def render_knowledge_base_status() -> None:
+    try:
+        collection = get_vector_collection(build_if_missing=False)
+        indexed_count = collection.count()
+    except Exception:
+        st.warning("Historical Defect Knowledge Base is not available yet.")
+        return
 
-        nav_items = [
-            ("Bug Submission", "Current Module", "active"),
-            ("AI Analysis", "Coming Soon", "locked"),
-            ("Duplicate Detection", "Coming Soon", "locked"),
-            ("Knowledge Base", "Coming Soon", "locked"),
-            ("Fix Recommendation", "Coming Soon", "locked"),
-        ]
-
-        for title, status, state in nav_items:
-            marker = "*" if state == "active" else "LOCK"
-            st.markdown(
-                f"""
-                <div class="nav-item {state}">
-                    <span class="nav-icon">{marker}</span>
-                    <span>
-                        <strong>{title}</strong>
-                        <small>{status}</small>
-                    </span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        st.markdown('<div class="sidebar-spacer"></div>', unsafe_allow_html=True)
-        st.markdown(
-            """
-            <div class="sidebar-footer">
-                <strong>Version 1.0</strong>
-                <span>Infosys Springboard Internship</span>
-            </div>
-            """,
-            unsafe_allow_html=True,
+    if indexed_count and is_vector_index_ready():
+        st.caption(f"Historical Defect Knowledge Base ready: {indexed_count:,} defects indexed.")
+    elif indexed_count:
+        st.info(
+            f"Historical Defect Knowledge Base build is incomplete "
+            f"({indexed_count:,} defects indexed). Searches will use the fast local fallback."
+        )
+    else:
+        st.info(
+            "Historical Defect Knowledge Base is ready to initialize. "
+            "Until the offline index is built, searches will use the fast local fallback."
         )
 
 
@@ -138,357 +99,425 @@ def render_header() -> None:
     st.markdown(
         """
         <section class="app-header">
-            <div>
-                <p class="eyebrow">Module 1 - Bug Submission</p>
-                <h1>AI Smart Bug Analyzer & Fix Advisor</h1>
-                <p>Submit software bugs, logs, screenshots, and stack traces for AI-powered defect analysis.</p>
-            </div>
+            <p class="eyebrow">Milestone 2 - Multi-Agent Bug Intelligence</p>
+            <h1>AI Smart Bug Analyzer & Fix Advisor</h1>
+            <p>Submit once to triage impact, interpret logs, and search similar historical defects.</p>
         </section>
         """,
         unsafe_allow_html=True,
     )
 
 
-def render_future_module_strip() -> None:
-    labels = [
-        "AI Bug Analysis",
-        "RAG Knowledge Base",
-        "Duplicate Bug Detection",
-        "Semantic Search",
-        "Root Cause Analysis",
-        "Fix Recommendation",
-        "Similar Bug Retrieval",
-        "LLM Response",
-    ]
-    st.markdown('<div class="future-strip">', unsafe_allow_html=True)
-    cols = st.columns(4)
-    for index, label in enumerate(labels):
-        with cols[index % 4]:
-            st.markdown(f'<div class="future-pill">{label}</div>', unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
 def render_submission_form() -> None:
-    st.markdown('<div class="form-card">', unsafe_allow_html=True)
-    st.markdown("### Submit a Bug Report")
-    st.caption("Capture enough context for the future AI analysis pipeline.")
+    with st.container():
+        st.markdown('<div class="form-card">', unsafe_allow_html=True)
+        st.markdown("### Bug Submission")
+        st.caption("Enter the required details, attach supporting files, and search the GitBugs knowledge base.")
 
-    st.divider()
-    st.markdown("#### 1. Project Information")
-    col_a, col_b, col_c = st.columns(3)
-    with col_a:
-        project_name = st.text_input("Project Name", placeholder="Example: Inventory API")
-    with col_b:
-        language = st.selectbox("Programming Language", LANGUAGES)
-    with col_c:
-        framework = st.selectbox("Framework", FRAMEWORKS)
-    operating_system = st.selectbox("Operating System", OPERATING_SYSTEMS)
-
-    st.divider()
-    st.markdown("#### 2. Bug Details")
-    bug_title = st.text_input("Bug Title", placeholder="Example: Report generation fails")
-    bug_description = st.text_area(
-        "Bug Description",
-        placeholder="Describe the issue in detail including the expected behavior and the actual behavior.",
-        height=170,
-    )
-
-    st.divider()
-    st.markdown("#### 3. Severity")
-    severity = st.radio("Select Severity", SEVERITIES, horizontal=True, index=2)
-
-    st.divider()
-    st.markdown("#### 4. Steps to Reproduce")
-    steps_to_reproduce = st.text_area(
-        "Steps to Reproduce",
-        placeholder=(
-            "1. Open the application\n"
-            "2. Login\n"
-            "3. Click Dashboard\n"
-            "4. Click Generate Report\n"
-            "5. Application crashes"
-        ),
-        height=170,
-    )
-
-    st.divider()
-    trace_col, logs_col = st.columns(2)
-    with trace_col:
-        st.markdown("#### 5. Stack Trace")
-        stack_trace = st.text_area(
-            "Stack Trace",
-            placeholder="Traceback (most recent call last)...",
-            height=230,
-        )
-    with logs_col:
-        st.markdown("#### 6. Error Logs")
-        error_logs = st.text_area(
-            "Error Logs",
-            placeholder="Paste console logs or error logs here.",
-            height=230,
+        # Keep this control outside the form so changing it triggers Streamlit's
+        # normal rerun and immediately updates the conditional form fields.
+        submission_method = st.segmented_control(
+            "Submission Method",
+            options=["Text", "File", "Text + File"],
+            default="Text + File",
+            selection_mode="single",
+            key="submission_method",
         )
 
-    st.divider()
-    upload_col, screenshot_col = st.columns([1.2, 1])
-    with upload_col:
-        st.markdown("#### 7. Upload Files")
-        uploaded_files = st.file_uploader(
-            "Upload logs or documents",
-            type=FILE_TYPES,
-            accept_multiple_files=True,
-            help="Supported: .txt, .log, .csv, .json, .xml, .pdf, .docx, .zip",
-        )
-        render_uploaded_file_table(uploaded_files)
+        with st.form("bug_submission_form", clear_on_submit=False):
+            bug_title = ""
+            bug_description = ""
+            steps_to_reproduce = ""
+            expected_result = ""
+            actual_result = ""
+            environment = ""
+            uploaded_files: list[Any] = []
 
-    with screenshot_col:
-        st.markdown("#### 8. Upload Screenshot")
-        screenshot = st.file_uploader(
-            "Upload screenshot",
-            type=SCREENSHOT_TYPES,
-            accept_multiple_files=False,
-            help="Supported: PNG, JPG, JPEG",
-        )
-        screenshot_dimensions = render_screenshot_preview(screenshot)
+            if submission_method in {"Text", "Text + File"}:
+                bug_title = st.text_input(
+                    "Bug Title *",
+                    placeholder="Application crashes when clicking Login",
+                )
+                bug_description = st.text_area(
+                    "Bug Description *",
+                    placeholder="Describe what went wrong, including any visible error messages or stack trace.",
+                    height=180,
+                )
+                col_left, col_right = st.columns(2)
+                with col_left:
+                    steps_to_reproduce = st.text_area(
+                        "Steps to Reproduce",
+                        placeholder="1. Open the app\n2. Go to Login\n3. Click Submit",
+                        height=150,
+                    )
+                    actual_result = st.text_area(
+                        "Actual Result",
+                        placeholder="The app crashes and shows a NullPointerException.",
+                        height=130,
+                    )
+                with col_right:
+                    expected_result = st.text_area(
+                        "Expected Result",
+                        placeholder="The user should be signed in and redirected to the dashboard.",
+                        height=150,
+                    )
+                    environment = st.text_area(
+                        "Environment",
+                        placeholder="OS: Windows 11\nBrowser: Chrome 126\nApp Version: 1.4.2",
+                        height=130,
+                    )
 
-    st.divider()
-    st.markdown("#### 9. Additional Notes")
-    additional_notes = st.text_area(
-        "Additional Notes",
-        placeholder="Add environment notes, recent changes, related tickets, or suspected causes.",
-        height=130,
-    )
+            if submission_method in {"File", "Text + File"}:
+                st.markdown("#### Upload Supporting Files")
+                uploaded_files = st.file_uploader(
+                    "Drag and drop files here",
+                    type=FILE_TYPES,
+                    accept_multiple_files=True,
+                    label_visibility="collapsed",
+                    help="Supported: txt, log, pdf, docx, png, jpg, jpeg, zip, java, py, js, ts, cpp, json, xml",
+                )
+                render_uploaded_files(uploaded_files)
 
-    draft_record = {
-        "project_name": project_name,
-        "language": language,
-        "framework": framework,
-        "operating_system": operating_system,
-        "bug_title": bug_title,
-        "bug_description": bug_description,
-        "severity": severity,
-        "steps_to_reproduce": steps_to_reproduce,
-        "stack_trace": stack_trace,
-        "error_logs": error_logs,
-        "uploaded_files": uploaded_files,
-        "screenshot": screenshot,
-        "additional_notes": additional_notes,
-    }
+            submitted = st.form_submit_button(
+                "Analyze Bug",
+                type="primary",
+                use_container_width=True,
+            )
 
-    st.markdown('<div class="submit-area">', unsafe_allow_html=True)
-    submitted = st.button("Submit Bug Report", type="primary", use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     if submitted:
-        handle_submission(draft_record, screenshot_dimensions)
+        handle_submission(
+            {
+                "submission_method": submission_method,
+                "bug_title": bug_title,
+                "bug_description": bug_description,
+                "steps_to_reproduce": steps_to_reproduce,
+                "expected_result": expected_result,
+                "actual_result": actual_result,
+                "environment": environment,
+                "uploaded_files": uploaded_files or [],
+            }
+        )
 
-    st.markdown("</div>", unsafe_allow_html=True)
 
-
-def render_uploaded_file_table(uploaded_files: list[Any] | None) -> None:
+def render_uploaded_files(uploaded_files: list[Any] | None) -> None:
     if not uploaded_files:
-        st.info("No files uploaded yet.")
+        st.info("No supporting files uploaded yet.")
         return
 
-    upload_time = datetime.now().strftime("%d %b %Y, %I:%M %p")
-    rows = [
-        {
-            "Filename": uploaded_file.name,
-            "Extension": Path(uploaded_file.name).suffix.lower() or "No extension",
-            "Size": format_file_size(uploaded_file.size),
-            "Upload Time": upload_time,
-        }
-        for uploaded_file in uploaded_files
-    ]
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    st.markdown('<div class="upload-grid">', unsafe_allow_html=True)
+    for uploaded_file in uploaded_files:
+        file_type = Path(uploaded_file.name).suffix.lower() or "No extension"
+        st.markdown(
+            f"""
+            <div class="upload-card">
+                <div class="file-icon">FILE</div>
+                <div>
+                    <strong>{escape_html(uploaded_file.name)}</strong>
+                    <span>{escape_html(file_type)} &bull; {format_file_size(uploaded_file.size)}</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.caption("Use the X in the upload area to remove a file before submission.")
 
 
-def render_screenshot_preview(screenshot: Any | None) -> dict[str, int] | None:
-    if screenshot is None:
-        st.info("No screenshot uploaded yet.")
-        return None
-
-    image = Image.open(screenshot)
-    dimensions = {"width": image.width, "height": image.height}
-    st.image(image, caption=screenshot.name, use_container_width=True)
-    met_a, met_b = st.columns(2)
-    met_a.metric("Width", f"{image.width}px")
-    met_b.metric("Height", f"{image.height}px")
-    return dimensions
-
-
-def handle_submission(
-    draft_record: dict[str, Any],
-    screenshot_dimensions: dict[str, int] | None,
-) -> None:
-    validation_record = {
-        **draft_record,
-        "uploaded_files": draft_record["uploaded_files"] or [],
-        "screenshot": draft_record["screenshot"],
-    }
-    errors = validate_submission(validation_record)
+def handle_submission(draft_record: dict[str, Any]) -> None:
+    errors = validate_submission(draft_record)
     if errors:
         for error in errors:
             st.error(error)
         return
 
-    submission_id = generate_submission_id()
-    timestamp = datetime.now().isoformat(timespec="seconds")
+    try:
+        with st.spinner("Reading uploaded files..."):
+            uploaded_text_parts = [
+                extract_uploaded_text(uploaded_file)
+                for uploaded_file in draft_record["uploaded_files"]
+            ]
 
-    uploaded_metadata = [
-        save_uploaded_file(uploaded_file, submission_id)
-        for uploaded_file in draft_record["uploaded_files"] or []
-    ]
+        with st.spinner("Preparing search query..."):
+            submitted_text = build_search_query(draft_record, uploaded_text_parts)
 
-    screenshot_metadata = None
-    if draft_record["screenshot"] is not None:
-        screenshot_metadata = save_uploaded_file(
-            draft_record["screenshot"],
-            submission_id,
-            is_screenshot=True,
-        )
-        screenshot_metadata["dimensions"] = screenshot_dimensions
+        submission_id = generate_submission_id()
+        search_started = time.perf_counter()
+        try:
+            with st.spinner("Searching historical defects..."):
+                similar_bugs = search_similar_bugs(submitted_text, limit=5)
+                first_match = similar_bugs[0] if similar_bugs else {}
+                search_backend = first_match.get("search_backend", MODEL_NAME)
+                indexed_count = int(first_match.get("historical_bugs_indexed", 0))
+                search_stats = {
+                    "historical_bugs_indexed": indexed_count,
+                    "embedding_model": search_backend,
+                    "vector_database_status": (
+                        "Ready" if search_backend == MODEL_NAME else "Local fallback"
+                    ),
+                    "search_time_seconds": round(time.perf_counter() - search_started, 2),
+                }
+        except Exception:
+            similar_bugs = []
+            search_stats = {
+                "historical_bugs_indexed": 0,
+                "embedding_model": MODEL_NAME,
+                "vector_database_status": "Temporarily unavailable",
+                "search_time_seconds": round(time.perf_counter() - search_started, 2),
+            }
+            st.warning("Agent analysis will continue, but historical similarity search is temporarily unavailable.")
 
-    record = {
-        "submission_id": submission_id,
-        "project_name": draft_record["project_name"].strip(),
-        "language": draft_record["language"],
-        "framework": draft_record["framework"],
-        "operating_system": draft_record["operating_system"],
-        "bug_title": draft_record["bug_title"].strip(),
-        "bug_description": draft_record["bug_description"].strip(),
-        "severity": draft_record["severity"],
-        "steps_to_reproduce": draft_record["steps_to_reproduce"].strip(),
-        "stack_trace": draft_record["stack_trace"].strip(),
-        "error_logs": draft_record["error_logs"].strip(),
-        "uploaded_files": uploaded_metadata,
-        "screenshot": screenshot_metadata,
-        "additional_notes": draft_record["additional_notes"].strip(),
-        "timestamp": timestamp,
-    }
+        uploaded_metadata = [
+            save_uploaded_file(uploaded_file, submission_id)
+            for uploaded_file in draft_record["uploaded_files"]
+        ]
+        record = {
+            "submission_id": submission_id,
+            "submission_method": form_value(draft_record, "submission_method"),
+            "bug_title": form_value(draft_record, "bug_title"),
+            "bug_description": form_value(draft_record, "bug_description"),
+            "steps_to_reproduce": form_value(draft_record, "steps_to_reproduce"),
+            "expected_result": form_value(draft_record, "expected_result"),
+            "actual_result": form_value(draft_record, "actual_result"),
+            "environment": form_value(draft_record, "environment"),
+            "submitted_text": submitted_text,
+            "log_text": "\n\n".join(part for part in uploaded_text_parts if part.strip()),
+            "uploaded_files": uploaded_metadata,
+            "similar_bugs": similar_bugs,
+            "search_stats": search_stats,
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+        }
 
-    save_report(record)
-    st.session_state.submitted_reports = load_reports()
+        with st.spinner("Running Triage and Log Analysis agents..."):
+            record["analysis"] = BugAnalysisOrchestrator().analyze(record, submission_id)
+
+        save_report(record)
+    except Exception:
+        st.error("Unable to submit the bug report. Please verify the uploaded files and try again.")
+        return
+
     st.session_state.last_submission = record
-    st.success("Bug report submitted successfully.")
+    st.session_state.analysis_history = [
+        record,
+        *[
+            item for item in st.session_state.analysis_history
+            if item.get("submission_id") != submission_id
+        ],
+    ][:25]
+    st.success("Bug submitted and analyzed successfully")
 
 
-def render_confirmation(record: dict[str, Any]) -> None:
-    st.markdown('<div class="confirmation-card">', unsafe_allow_html=True)
-    st.markdown("### Submission Confirmation")
-    col_1, col_2, col_3 = st.columns(3)
-    col_1.metric("Submission ID", record["submission_id"])
-    col_2.metric("Timestamp", readable_timestamp(record["timestamp"]))
-    col_3.metric("Severity", record["severity"])
+def form_value(record: dict[str, Any], key: str) -> str:
+    return str(record.get(key) or "").strip()
 
-    col_4, col_5, col_6 = st.columns(3)
-    col_4.metric("Project", record["project_name"])
-    col_5.metric("Language / Framework", f"{record['language']} / {record['framework']}")
-    col_6.metric("Uploaded Files", len(record["uploaded_files"]))
 
+def build_search_query(record: dict[str, Any], uploaded_text_parts: list[str]) -> str:
+    sections = [
+        ("Bug Title", record.get("bug_title")),
+        ("Bug Description", record.get("bug_description")),
+        ("Steps to Reproduce", record.get("steps_to_reproduce")),
+        ("Expected Result", record.get("expected_result")),
+        ("Actual Result", record.get("actual_result")),
+        ("Environment", record.get("environment")),
+        ("Extracted Uploaded File Text", "\n\n".join(uploaded_text_parts)),
+    ]
+    return "\n\n".join(
+        f"{label}:\n{str(value).strip()}"
+        for label, value in sections
+        if value and str(value).strip()
+    )
+
+
+def render_results(record: dict[str, Any]) -> None:
+    st.markdown("## AI Analysis Dashboard")
+    render_analysis_dashboard(record.get("analysis") or {})
+    st.markdown("## Historical Knowledge Search")
+    render_search_statistics(record.get("search_stats", {}))
+    st.markdown("## Top Similar Historical Bugs")
+    similar_bugs = record.get("similar_bugs") or []
+    if not similar_bugs:
+        st.info(
+            "No similar historical defects were found.\n\n"
+            "Your submitted bug appears to be unique.\n\n"
+            "It can be added to improve the historical defect knowledge base in future."
+        )
+        return
+
+    for index, bug in enumerate(similar_bugs, start=1):
+        render_similarity_card(index, bug)
+
+
+def render_analysis_dashboard(analysis: dict[str, Any]) -> None:
+    """Render the stable orchestrator response as an issue-tracker dashboard."""
+    triage = analysis.get("triage") or {}
+    log_analysis = analysis.get("log_analysis") or {}
+    metadata = analysis.get("metadata") or {}
+    if not triage and not log_analysis:
+        st.warning("Agent analysis is unavailable for this submission.")
+        return
+
+    if triage:
+        st.markdown(
+            f"""
+            <section class="agent-summary-grid">
+                <div class="summary-card"><span>Severity</span><strong class="badge severity-{escape_html(str(triage.get('severity', 'medium')).lower())}">{escape_html(triage.get('severity', 'Unknown'))}</strong></div>
+                <div class="summary-card"><span>Priority</span><strong class="badge priority-badge">{escape_html(triage.get('priority', 'Unknown'))}</strong></div>
+                <div class="summary-card"><span>Component</span><strong class="badge component-badge">{escape_html(triage.get('component', 'Other'))}</strong></div>
+                <div class="summary-card"><span>Processing Time</span><strong>{float(metadata.get('processing_time_seconds', 0)):.3f}s</strong></div>
+            </section>
+            """,
+            unsafe_allow_html=True,
+        )
+        left, right = st.columns([2, 1])
+        with left:
+            st.markdown("### Triage Agent")
+            st.markdown(f"**Business impact:** {triage.get('business_impact', 'Not determined')}")
+            st.info(triage.get("reasoning", "No explanation available."))
+        with right:
+            confidence = int(triage.get("confidence", 0))
+            st.metric("Triage Confidence", f"{confidence}%")
+            st.progress(confidence / 100)
+        evidence = triage.get("evidence") or []
+        if evidence:
+            st.markdown("#### Supporting Evidence")
+            st.dataframe(
+                [{"Signal": signal, "Source": "Report / stack trace"} for signal in evidence],
+                hide_index=True,
+                use_container_width=True,
+            )
+
+    if log_analysis:
+        st.markdown("### Log Analysis Agent")
+        first, second, third = st.columns(3)
+        first.metric("Exception", log_analysis.get("exception_type") or "Not detected")
+        second.metric("Language", log_analysis.get("language") or "Unknown")
+        third.metric("Confidence", f"{int(log_analysis.get('confidence', 0))}%")
+        st.markdown(
+            f"""
+            <section class="detail-grid">
+                <div><span>Error Message</span><strong>{escape_html(log_analysis.get('error_message') or 'Not available')}</strong></div>
+                <div><span>Failure Point</span><strong>{escape_html(log_analysis.get('failure_point') or 'Not available')}</strong></div>
+                <div><span>File / Line</span><strong>{escape_html(log_analysis.get('file') or 'Unknown')} : {escape_html(log_analysis.get('line') or '-')}</strong></div>
+                <div><span>Function / Method</span><strong>{escape_html(log_analysis.get('function') or 'Unknown')}</strong></div>
+                <div><span>Code Module</span><strong>{escape_html(log_analysis.get('module') or 'Unknown')}</strong></div>
+                <div><span>Probable Product Area</span><strong>{escape_html(log_analysis.get('probable_module') or 'Other')}</strong></div>
+            </section>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.warning(f"**Root cause hint:** {log_analysis.get('probable_cause', 'Not enough evidence.')}")
+        with st.expander("Call Stack Summary", expanded=True):
+            for step in log_analysis.get("call_stack_summary") or []:
+                st.markdown(f"- {step}")
+        for warning in log_analysis.get("warnings") or []:
+            st.caption(f"Parser note: {warning}")
+
+    errors = metadata.get("agent_errors") or {}
+    if errors:
+        st.warning("Some agents could not complete: " + ", ".join(errors))
+    with st.expander("Raw Analysis JSON"):
+        st.json(analysis)
+
+
+def render_similarity_card(index: int, bug: dict[str, Any]) -> None:
+    title = bug.get("title") or "Untitled historical bug"
+    description = bug.get("description") or bug.get("full_text") or "No description available."
     st.markdown(
         f"""
-        <div class="confirmation-grid">
-            <span><strong>Screenshot Uploaded:</strong> {as_bool_label(record["screenshot"])}</span>
-            <span><strong>Operating System:</strong> {record["operating_system"]}</span>
-        </div>
+        <article class="result-card">
+            <div class="result-card-header">
+                <span class="match-badge {bug.get("badge_class", "match-low")}">{bug.get("badge_label", "Match")}</span>
+                <strong>Similarity: {bug.get("similarity_percentage", 0)}%</strong>
+            </div>
+            <h3>{index}. {escape_html(title)}</h3>
+            <div class="bug-id">{escape_html(bug.get("bug_id", "Unknown Bug ID"))}</div>
+            <p>{escape_html(shorten(description, 360))}</p>
+            <div class="result-meta">
+                {render_optional_meta("Project", bug.get("project_name"))}
+                {render_optional_meta("Priority", bug.get("priority"))}
+                {render_optional_meta("Status", bug.get("status"))}
+                {render_optional_meta("Labels", bug.get("labels"))}
+                {render_optional_meta("Root Cause", bug.get("root_cause"))}
+                {render_optional_meta("Resolution", bug.get("resolution"))}
+            </div>
+            {render_match_reasons(bug.get("match_reasons", []))}
+        </article>
         """,
         unsafe_allow_html=True,
     )
-    st.markdown("</div>", unsafe_allow_html=True)
 
-
-def render_history(reports: list[dict[str, Any]]) -> None:
-    st.markdown("## Session History")
-    if not reports:
-        st.info("Submitted bug reports will appear here.")
-        return
-
-    for report in reversed(reports):
-        title = (
-            f"{report['submission_id']} | {report['bug_title']} | "
-            f"{report['severity']} | {readable_timestamp(report['timestamp'])}"
-        )
-        with st.expander(title):
-            badge_class = severity_badge_class(report["severity"])
-            st.markdown(
-                f"""
-                <div class="history-summary">
-                    <span class="severity-badge {badge_class}">{report["severity"]}</span>
-                    <span>{report["project_name"]}</span>
-                    <span>{report["language"]} / {report["framework"]}</span>
-                    <span>{report["operating_system"]}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-            info_col, detail_col = st.columns([0.9, 1.1])
-            with info_col:
-                st.markdown("#### Project Information")
-                st.write(f"Project: {report['project_name']}")
-                st.write(f"Language: {report['language']}")
-                st.write(f"Framework: {report['framework']}")
-                st.write(f"Operating System: {report['operating_system']}")
-
-                st.markdown("#### Uploaded Files")
-                render_saved_files(report.get("uploaded_files", []))
-
-                st.markdown("#### Screenshot Preview")
-                render_saved_screenshot(report.get("screenshot"))
-
-            with detail_col:
-                st.markdown("#### Description")
-                st.write(report.get("bug_description") or "Not provided.")
-                st.markdown("#### Steps to Reproduce")
-                st.code(report.get("steps_to_reproduce") or "Not provided.", language="text")
-                st.markdown("#### Stack Trace")
-                st.code(report.get("stack_trace") or "Not provided.", language="text")
-                st.markdown("#### Error Logs")
-                st.code(report.get("error_logs") or "Not provided.", language="text")
-                st.markdown("#### Notes")
-                st.write(report.get("additional_notes") or "No additional notes.")
-
-
-def render_saved_files(files: list[dict[str, Any]]) -> None:
-    if not files:
-        st.write("No files uploaded.")
-        return
-
-    rows = [
-        {
-            "Filename": item["filename"],
-            "Extension": item["extension"],
-            "Size": format_file_size(item["size_bytes"]),
-            "Upload Time": readable_timestamp(item["upload_time"]),
+    with st.expander("Expand Details"):
+        details = {
+            "Bug ID": bug.get("bug_id"),
+            "Title": title,
+            "Project Name": bug.get("project_name"),
+            "Priority": bug.get("priority"),
+            "Status": bug.get("status"),
+            "Labels": bug.get("labels"),
+            "Root Cause": bug.get("root_cause"),
+            "Resolution": bug.get("resolution"),
+            "Source File": bug.get("source_file"),
         }
-        for item in files
-    ]
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+        for label, value in details.items():
+            if value:
+                st.markdown(f"**{label}:** {value}")
+        st.markdown("**Full Historical Bug:**")
+        st.write(bug.get("full_text") or description)
 
 
-def render_saved_screenshot(screenshot: dict[str, Any] | None) -> None:
-    if not screenshot:
-        st.write("No screenshot uploaded.")
-        return
-
-    path = Path(screenshot["path"])
-    if not path.exists():
-        st.warning("Screenshot file is missing from local storage.")
-        return
-
-    st.image(str(path), caption=screenshot["filename"], use_container_width=True)
-    dimensions = screenshot.get("dimensions") or {}
-    if dimensions:
-        st.caption(f"{dimensions.get('width')}px x {dimensions.get('height')}px")
-
-
-def render_footer() -> None:
+def render_search_statistics(stats: dict[str, Any]) -> None:
+    default_stats = {
+        "historical_bugs_indexed": 0,
+        "embedding_model": MODEL_NAME,
+        "vector_database_status": "Ready",
+        "search_time_seconds": 0,
+    }
+    merged = {**default_stats, **(stats or {})}
     st.markdown(
-        """
-        <footer class="app-footer">
-            <strong>AI Smart Bug Analyzer & Fix Advisor</strong>
-            <span>Developed as part of Infosys Springboard Internship</span>
-        </footer>
+        f"""
+        <section class="stats-grid">
+            <div><span>Historical Bugs</span><strong>{int(merged["historical_bugs_indexed"]):,}</strong></div>
+            <div><span>Embedding Model</span><strong>{escape_html(merged["embedding_model"])}</strong></div>
+            <div><span>Vector Database</span><strong>{escape_html(merged["vector_database_status"])}</strong></div>
+            <div><span>Search Time</span><strong>{merged["search_time_seconds"]:.2f} seconds</strong></div>
+        </section>
         """,
         unsafe_allow_html=True,
+    )
+
+
+def render_match_reasons(reasons: list[str]) -> str:
+    if not reasons:
+        return ""
+    items = "".join(f"<li>{escape_html(reason)}</li>" for reason in reasons[:4])
+    return f"""
+        <div class="match-reasons">
+            <strong>Why this matched</strong>
+            <ul>{items}</ul>
+        </div>
+    """
+
+
+def render_optional_meta(label: str, value: Any) -> str:
+    if not value:
+        return ""
+    return f"<span><b>{escape_html(label)}:</b> {escape_html(shorten(str(value), 140))}</span>"
+
+
+def shorten(text: str, limit: int) -> str:
+    cleaned = " ".join(str(text or "").split())
+    if len(cleaned) <= limit:
+        return cleaned
+    return f"{cleaned[: limit - 3].rstrip()}..."
+
+
+def escape_html(value: Any) -> str:
+    text = str(value or "")
+    return (
+        text.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+        .replace("'", "&#39;")
     )

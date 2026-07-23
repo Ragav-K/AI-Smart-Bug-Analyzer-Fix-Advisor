@@ -1,12 +1,24 @@
 # Python generated files
 __pycache__/
+.pytest_cache/
 *.py[cod]
 *$py.class
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
 
 # Virtual environments
 .venv/
 venv/
 env/
+
+# Packaging/build output
+build/
+dist/
+*.egg-info/
 
 # Local configuration and secrets
 .env
@@ -19,10 +31,15 @@ env/
 
 # App runtime data
 data/*.json
+data/chroma_*/
 uploads/
+
+# Large source datasets (keep the smaller *-combined.csv samples)
+gitbugs/**/*_bugs.csv
 
 # OS/editor files
 .DS_Store
 Thumbs.db
+Desktop.ini
 .vscode/
 .idea/

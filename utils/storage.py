@@ -85,6 +85,13 @@ def save_uploaded_file(
     destination = destination_for_file(uploaded_file, is_screenshot)
     saved_path = destination / f"{submission_id}_{safe_name}"
 
+    duplicate_number = 2
+    while saved_path.exists():
+        suffix = Path(safe_name).suffix
+        stem = Path(safe_name).stem
+        saved_path = destination / f"{submission_id}_{stem}_{duplicate_number}{suffix}"
+        duplicate_number += 1
+
     saved_path.write_bytes(uploaded_file.getbuffer())
     stat = saved_path.stat()
 
