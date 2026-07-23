@@ -1,17 +1,31 @@
-# RAG Pipeline
+# Historical-Defect Retrieval Pipeline
 
-The historical knowledge base is built from real bug datasets, such as Mozilla, Apache, and Eclipse bug reports from Kaggle. These reports give the system examples of past failures, fixes, duplicate bugs, and root causes.
+The current project implements retrieval, not an LLM generation layer.
+Historical CSV, JSON, JSONL, XLS, and XLSX files below `gitbugs/` are normalized
+into a common defect record.
 
-The pipeline first cleans the dataset and keeps the useful fields, such as title, description, comments, status, component, and resolution. Then each bug report is converted into embeddings using `all-MiniLM-L6-v2`.
+## Semantic path
 
-Those embeddings are stored in ChromaDB. When a new bug is submitted, the system turns the new report into an embedding too, then searches ChromaDB for similar historical bugs.
+1. Useful fields are combined into searchable text.
+2. `all-MiniLM-L6-v2` creates normalized embeddings.
+3. ChromaDB persists the vectors under `data/chroma_gitbugs/`.
+4. A submitted report is embedded and queried against the ready collection.
+5. The closest matches receive bounded similarity scores and plain-language
+   match reasons.
 
-The LLM does not answer from memory alone. It gets the closest matching bug reports as context, then uses them to explain the likely root cause, duplicate match, and suggested fix.
+The interactive search path never builds the index. This keeps a submission
+from unexpectedly waiting several minutes.
 
-In simple terms:
+## Local fallback
 
-- Kaggle bug data becomes the project memory.
-- Sentence Transformers convert bug text into searchable meaning.
-- ChromaDB finds similar old bugs.
-- LangChain passes those matches to the LLM.
-- The final answer is grounded in past bug data.
+If the index is absent, empty, unavailable, or exceeds the 15-second search
+timeout, the system falls back to a dependency-free token matcher. The fallback
+limits rows and text sizes so response time and memory use remain bounded.
+
+## Current boundary
+
+Retrieved defects are displayed alongside deterministic agent analysis. A future
+root-cause or remediation agent may consume this evidence, but the current code
+does not call LangChain or a hosted LLM.
+
+See [DATASETS.md](DATASETS.md) for data formats and repository policy.

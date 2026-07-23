@@ -2,15 +2,21 @@
 
 | Area | Tool | Why it was picked |
 |---|---|---|
-| Frontend | Streamlit | Fast to build and easy to demo for Milestone 1. |
-| Backend/API | Python with FastAPI or Flask, optional | Useful later if the AI modules need clean API endpoints. |
-| AI Orchestration | LangChain | Helps connect agents, prompts, retrieval, and LLM calls. |
-| LLM | OpenAI-compatible LLM | Keeps the app flexible across providers that support the same API style. |
-| Embedding Model | Sentence Transformers `all-MiniLM-L6-v2` | Lightweight, popular, and good enough for semantic bug search. |
-| Vector Database | ChromaDB | Simple local vector storage for matching new bugs with old ones. |
-| Database | MongoDB or SQLite | MongoDB fits richer bug records; SQLite is easier for a lightweight setup. |
-| File Storage | Local Storage or Cloudinary | Local storage works for demos; Cloudinary can help if the app is deployed. |
-| Dataset Source | Kaggle Mozilla, Apache, Eclipse bug datasets | Gives the system real historical bug data instead of made-up examples. |
-| Version Control | Git and GitHub | Tracks project changes and makes submission/review easier. |
-| Deployment | Streamlit Community Cloud or Render | Both are beginner-friendly choices for sharing the app online. |
-| Testing | Pytest | Simple Python testing for validators, storage, and future AI logic. |
+| Language | Python 3.11 | Application, agents, retrieval, persistence, and tests |
+| UI | Streamlit | Interactive form, uploads, status, and results dashboard |
+| Validation | Pydantic 1.10–2.x | Stable structured agent outputs |
+| Data processing | Pandas and OpenPyXL | CSV and spreadsheet ingestion |
+| Embeddings | Sentence Transformers `all-MiniLM-L6-v2` | Local semantic representation |
+| Vector database | ChromaDB | Persistent local cosine-similarity search |
+| Local fallback | Python counters and cosine similarity | Retrieval without model or index |
+| Document parsing | PyPDF2 and python-docx | Text extraction from uploaded documents |
+| Images | Pillow | Uploaded image handling |
+| Persistence | JSON and local filesystem | Lightweight report and file storage |
+| Testing | Pytest | Unit and integration coverage |
+| Version control | Git and GitHub | Collaboration and project history |
+
+## Not currently used
+
+The codebase does not currently require FastAPI, Flask, LangChain, MongoDB,
+Cloudinary, or a hosted LLM. These should not be described as runtime
+dependencies unless they are implemented in a future change.

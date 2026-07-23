@@ -1,27 +1,36 @@
 # System Architecture
 
-This project starts with a bug report from the user. The report can include a plain description, stack trace, logs, uploaded files, and a screenshot.
-
-After submission, the future system passes that information through a group of focused agents. Each agent looks at one part of the problem, then the app combines their findings into a clear result: likely root cause, duplicate status, and suggested fix.
+The application is a local Streamlit system with deterministic analysis and
+optional semantic retrieval.
 
 ```mermaid
 flowchart TD
-    A[User Input] --> B[Bug Submission Module]
-    B --> C[Multi-Agent Orchestration]
-    C --> D[Triage Agent]
-    C --> E[Log Analysis Agent]
-    C --> F[Duplicate Agent]
-    C --> G[Root Cause Agent]
-    C --> H[Remediation Agent]
-    F --> I[Duplicate Detection Module]
-    I --> J[Historical Defect Knowledge Base]
-    J --> K[RAG Pipeline + Vector DB Embeddings]
-    K --> L[Kaggle Bug Datasets]
-    D --> M[Results & Display Module]
-    E --> M
-    F --> M
-    G --> M
-    H --> M
+    A["Text and uploaded files"] --> B["Validation"]
+    B --> C["Text and metadata extraction"]
+    C --> D["Historical-defect search"]
+    C --> E["BugAnalysisOrchestrator"]
+    D --> F{"Ready vector index?"}
+    F -->|Yes| G["Sentence Transformer + ChromaDB"]
+    F -->|No or timeout| H["Bounded local matcher"]
+    E --> I["Triage agent"]
+    E --> J["Log-analysis agent"]
+    G --> K["Streamlit results dashboard"]
+    H --> K
+    I --> K
+    J --> K
+    K --> L["Local JSON and upload storage"]
 ```
 
-For Milestone 1, the working part is the Bug Submission Module. The AI analysis, duplicate detection, and fix recommendation parts are planned as the next modules.
+## Design properties
+
+- **Local-first:** no hosted API is required.
+- **Fault-isolated:** one agent failure does not discard other results.
+- **Bounded:** logs, stack frames, dataset rows, result counts, and vector-search
+  time are limited.
+- **Structured:** Pydantic models and stable metadata make results testable.
+- **Graceful degradation:** semantic retrieval falls back to local matching.
+- **Runtime separation:** reports, uploads, models, and vector indexes are not
+  committed to Git.
+
+The current implementation includes triage and log analysis. Duplicate
+classification, synthesized root cause, and remediation agents remain planned.
