@@ -7,12 +7,12 @@
     "exception_detection_accuracy": 1.0,
     "all_fields_exact_match_accuracy": 1.0,
     "average_triage_confidence": 84.5,
-    "average_log_confidence": 82.17,
-    "average_execution_time_seconds": 0.00725,
-    "p95_execution_time_seconds": 0.011217,
+    "average_log_confidence": 80.37,
+    "average_execution_time_seconds": 0.096545,
+    "p95_execution_time_seconds": 0.09221,
     "false_positives": 0,
     "false_negatives": 0,
-    "generated_at": "2026-07-20T11:41:11.847674+00:00"
+    "generated_at": "2026-08-05T13:43:17.953927+00:00"
   },
   "cases": [
     {
@@ -35,7 +35,7 @@
       "exception_correct": true,
       "triage_confidence": 79,
       "log_confidence": 90,
-      "execution_time_seconds": 0.030065,
+      "execution_time_seconds": 2.050986,
       "false_positive": false,
       "false_negative": false
     },
@@ -59,7 +59,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.006382,
+      "execution_time_seconds": 0.074938,
       "false_positive": false,
       "false_negative": false
     },
@@ -83,7 +83,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.00603,
+      "execution_time_seconds": 0.064711,
       "false_positive": false,
       "false_negative": false
     },
@@ -106,8 +106,8 @@
       "component_correct": true,
       "exception_correct": true,
       "triage_confidence": 85,
-      "log_confidence": 72,
-      "execution_time_seconds": 0.005099,
+      "log_confidence": 60,
+      "execution_time_seconds": 0.04903,
       "false_positive": false,
       "false_negative": false
     },
@@ -131,7 +131,7 @@
       "exception_correct": true,
       "triage_confidence": 79,
       "log_confidence": 90,
-      "execution_time_seconds": 0.00703,
+      "execution_time_seconds": 0.083245,
       "false_positive": false,
       "false_negative": false
     },
@@ -155,7 +155,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.005344,
+      "execution_time_seconds": 0.068253,
       "false_positive": false,
       "false_negative": false
     },
@@ -179,7 +179,7 @@
       "exception_correct": true,
       "triage_confidence": 91,
       "log_confidence": 90,
-      "execution_time_seconds": 0.005383,
+      "execution_time_seconds": 0.064341,
       "false_positive": false,
       "false_negative": false
     },
@@ -203,7 +203,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 72,
-      "execution_time_seconds": 0.004289,
+      "execution_time_seconds": 0.055469,
       "false_positive": false,
       "false_negative": false
     },
@@ -226,8 +226,8 @@
       "component_correct": true,
       "exception_correct": true,
       "triage_confidence": 85,
-      "log_confidence": 90,
-      "execution_time_seconds": 0.006575,
+      "log_confidence": 78,
+      "execution_time_seconds": 0.078702,
       "false_positive": false,
       "false_negative": false
     },
@@ -251,7 +251,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.004737,
+      "execution_time_seconds": 0.058662,
       "false_positive": false,
       "false_negative": false
     },
@@ -275,7 +275,7 @@
       "exception_correct": true,
       "triage_confidence": 91,
       "log_confidence": 61,
-      "execution_time_seconds": 0.003954,
+      "execution_time_seconds": 0.048431,
       "false_positive": false,
       "false_negative": false
     },
@@ -298,8 +298,8 @@
       "component_correct": true,
       "exception_correct": true,
       "triage_confidence": 79,
-      "log_confidence": 61,
-      "execution_time_seconds": 0.003468,
+      "log_confidence": 49,
+      "execution_time_seconds": 0.042812,
       "false_positive": false,
       "false_negative": false
     },
@@ -323,7 +323,7 @@
       "exception_correct": true,
       "triage_confidence": 79,
       "log_confidence": 90,
-      "execution_time_seconds": 0.006898,
+      "execution_time_seconds": 0.07534,
       "false_positive": false,
       "false_negative": false
     },
@@ -347,7 +347,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.007069,
+      "execution_time_seconds": 0.089099,
       "false_positive": false,
       "false_negative": false
     },
@@ -371,7 +371,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.010958,
+      "execution_time_seconds": 0.076416,
       "false_positive": false,
       "false_negative": false
     },
@@ -395,7 +395,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 72,
-      "execution_time_seconds": 0.008786,
+      "execution_time_seconds": 0.065198,
       "false_positive": false,
       "false_negative": false
     },
@@ -419,7 +419,7 @@
       "exception_correct": true,
       "triage_confidence": 79,
       "log_confidence": 90,
-      "execution_time_seconds": 0.007715,
+      "execution_time_seconds": 0.091414,
       "false_positive": false,
       "false_negative": false
     },
@@ -443,7 +443,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.008664,
+      "execution_time_seconds": 0.087182,
       "false_positive": false,
       "false_negative": false
     },
@@ -467,7 +467,7 @@
       "exception_correct": true,
       "triage_confidence": 91,
       "log_confidence": 90,
-      "execution_time_seconds": 0.007349,
+      "execution_time_seconds": 0.080291,
       "false_positive": false,
       "false_negative": false
     },
@@ -491,7 +491,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 72,
-      "execution_time_seconds": 0.007395,
+      "execution_time_seconds": 0.061214,
       "false_positive": false,
       "false_negative": false
     },
@@ -515,7 +515,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.007541,
+      "execution_time_seconds": 0.096094,
       "false_positive": false,
       "false_negative": false
     },
@@ -539,7 +539,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.007068,
+      "execution_time_seconds": 0.073197,
       "false_positive": false,
       "false_negative": false
     },
@@ -563,7 +563,7 @@
       "exception_correct": true,
       "triage_confidence": 91,
       "log_confidence": 61,
-      "execution_time_seconds": 0.007143,
+      "execution_time_seconds": 0.057414,
       "false_positive": false,
       "false_negative": false
     },
@@ -587,7 +587,7 @@
       "exception_correct": true,
       "triage_confidence": 79,
       "log_confidence": 61,
-      "execution_time_seconds": 0.006656,
+      "execution_time_seconds": 0.057202,
       "false_positive": false,
       "false_negative": false
     },
@@ -611,7 +611,7 @@
       "exception_correct": true,
       "triage_confidence": 79,
       "log_confidence": 90,
-      "execution_time_seconds": 0.007822,
+      "execution_time_seconds": 0.041256,
       "false_positive": false,
       "false_negative": false
     },
@@ -635,7 +635,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.008244,
+      "execution_time_seconds": 0.052058,
       "false_positive": false,
       "false_negative": false
     },
@@ -659,7 +659,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.00725,
+      "execution_time_seconds": 0.038171,
       "false_positive": false,
       "false_negative": false
     },
@@ -682,8 +682,8 @@
       "component_correct": true,
       "exception_correct": true,
       "triage_confidence": 85,
-      "log_confidence": 72,
-      "execution_time_seconds": 0.005727,
+      "log_confidence": 60,
+      "execution_time_seconds": 0.037471,
       "false_positive": false,
       "false_negative": false
     },
@@ -707,7 +707,7 @@
       "exception_correct": true,
       "triage_confidence": 79,
       "log_confidence": 90,
-      "execution_time_seconds": 0.009078,
+      "execution_time_seconds": 0.043047,
       "false_positive": false,
       "false_negative": false
     },
@@ -731,7 +731,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.008019,
+      "execution_time_seconds": 0.044041,
       "false_positive": false,
       "false_negative": false
     },
@@ -755,7 +755,7 @@
       "exception_correct": true,
       "triage_confidence": 91,
       "log_confidence": 90,
-      "execution_time_seconds": 0.005857,
+      "execution_time_seconds": 0.042099,
       "false_positive": false,
       "false_negative": false
     },
@@ -779,7 +779,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 72,
-      "execution_time_seconds": 0.004845,
+      "execution_time_seconds": 0.039745,
       "false_positive": false,
       "false_negative": false
     },
@@ -802,8 +802,8 @@
       "component_correct": true,
       "exception_correct": true,
       "triage_confidence": 85,
-      "log_confidence": 90,
-      "execution_time_seconds": 0.00825,
+      "log_confidence": 78,
+      "execution_time_seconds": 0.045895,
       "false_positive": false,
       "false_negative": false
     },
@@ -827,7 +827,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.005509,
+      "execution_time_seconds": 0.043561,
       "false_positive": false,
       "false_negative": false
     },
@@ -851,7 +851,7 @@
       "exception_correct": true,
       "triage_confidence": 91,
       "log_confidence": 61,
-      "execution_time_seconds": 0.003457,
+      "execution_time_seconds": 0.038266,
       "false_positive": false,
       "false_negative": false
     },
@@ -874,8 +874,8 @@
       "component_correct": true,
       "exception_correct": true,
       "triage_confidence": 79,
-      "log_confidence": 61,
-      "execution_time_seconds": 0.004041,
+      "log_confidence": 49,
+      "execution_time_seconds": 0.036143,
       "false_positive": false,
       "false_negative": false
     },
@@ -899,7 +899,7 @@
       "exception_correct": true,
       "triage_confidence": 79,
       "log_confidence": 90,
-      "execution_time_seconds": 0.005083,
+      "execution_time_seconds": 0.062398,
       "false_positive": false,
       "false_negative": false
     },
@@ -923,7 +923,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.006598,
+      "execution_time_seconds": 0.072435,
       "false_positive": false,
       "false_negative": false
     },
@@ -947,7 +947,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.005073,
+      "execution_time_seconds": 0.062085,
       "false_positive": false,
       "false_negative": false
     },
@@ -971,7 +971,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 72,
-      "execution_time_seconds": 0.004427,
+      "execution_time_seconds": 0.049233,
       "false_positive": false,
       "false_negative": false
     },
@@ -995,7 +995,7 @@
       "exception_correct": true,
       "triage_confidence": 79,
       "log_confidence": 90,
-      "execution_time_seconds": 0.006579,
+      "execution_time_seconds": 0.072589,
       "false_positive": false,
       "false_negative": false
     },
@@ -1019,7 +1019,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.005451,
+      "execution_time_seconds": 0.064406,
       "false_positive": false,
       "false_negative": false
     },
@@ -1043,7 +1043,7 @@
       "exception_correct": true,
       "triage_confidence": 91,
       "log_confidence": 90,
-      "execution_time_seconds": 0.005498,
+      "execution_time_seconds": 0.06671,
       "false_positive": false,
       "false_negative": false
     },
@@ -1067,7 +1067,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 72,
-      "execution_time_seconds": 0.006286,
+      "execution_time_seconds": 0.049303,
       "false_positive": false,
       "false_negative": false
     },
@@ -1091,7 +1091,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.009076,
+      "execution_time_seconds": 0.07988,
       "false_positive": false,
       "false_negative": false
     },
@@ -1115,7 +1115,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.004846,
+      "execution_time_seconds": 0.062552,
       "false_positive": false,
       "false_negative": false
     },
@@ -1139,7 +1139,7 @@
       "exception_correct": true,
       "triage_confidence": 91,
       "log_confidence": 61,
-      "execution_time_seconds": 0.003846,
+      "execution_time_seconds": 0.047732,
       "false_positive": false,
       "false_negative": false
     },
@@ -1163,7 +1163,7 @@
       "exception_correct": true,
       "triage_confidence": 79,
       "log_confidence": 61,
-      "execution_time_seconds": 0.003663,
+      "execution_time_seconds": 0.045967,
       "false_positive": false,
       "false_negative": false
     },
@@ -1187,7 +1187,7 @@
       "exception_correct": true,
       "triage_confidence": 79,
       "log_confidence": 90,
-      "execution_time_seconds": 0.007253,
+      "execution_time_seconds": 0.118875,
       "false_positive": false,
       "false_negative": false
     },
@@ -1211,7 +1211,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.01001,
+      "execution_time_seconds": 0.085439,
       "false_positive": false,
       "false_negative": false
     },
@@ -1235,7 +1235,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.008509,
+      "execution_time_seconds": 0.075006,
       "false_positive": false,
       "false_negative": false
     },
@@ -1258,8 +1258,8 @@
       "component_correct": true,
       "exception_correct": true,
       "triage_confidence": 85,
-      "log_confidence": 72,
-      "execution_time_seconds": 0.007204,
+      "log_confidence": 60,
+      "execution_time_seconds": 0.058904,
       "false_positive": false,
       "false_negative": false
     },
@@ -1283,7 +1283,7 @@
       "exception_correct": true,
       "triage_confidence": 79,
       "log_confidence": 90,
-      "execution_time_seconds": 0.012542,
+      "execution_time_seconds": 0.09221,
       "false_positive": false,
       "false_negative": false
     },
@@ -1307,7 +1307,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.011217,
+      "execution_time_seconds": 0.084326,
       "false_positive": false,
       "false_negative": false
     },
@@ -1331,7 +1331,7 @@
       "exception_correct": true,
       "triage_confidence": 91,
       "log_confidence": 90,
-      "execution_time_seconds": 0.008999,
+      "execution_time_seconds": 0.077524,
       "false_positive": false,
       "false_negative": false
     },
@@ -1355,7 +1355,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 72,
-      "execution_time_seconds": 0.007105,
+      "execution_time_seconds": 0.06245,
       "false_positive": false,
       "false_negative": false
     },
@@ -1378,8 +1378,8 @@
       "component_correct": true,
       "exception_correct": true,
       "triage_confidence": 85,
-      "log_confidence": 90,
-      "execution_time_seconds": 0.012862,
+      "log_confidence": 78,
+      "execution_time_seconds": 0.079632,
       "false_positive": false,
       "false_negative": false
     },
@@ -1403,7 +1403,7 @@
       "exception_correct": true,
       "triage_confidence": 85,
       "log_confidence": 90,
-      "execution_time_seconds": 0.009532,
+      "execution_time_seconds": 0.066548,
       "false_positive": false,
       "false_negative": false
     },
@@ -1427,7 +1427,7 @@
       "exception_correct": true,
       "triage_confidence": 91,
       "log_confidence": 61,
-      "execution_time_seconds": 0.005815,
+      "execution_time_seconds": 0.053381,
       "false_positive": false,
       "false_negative": false
     },
@@ -1450,8 +1450,8 @@
       "component_correct": true,
       "exception_correct": true,
       "triage_confidence": 79,
-      "log_confidence": 61,
-      "execution_time_seconds": 0.007851,
+      "log_confidence": 49,
+      "execution_time_seconds": 0.051697,
       "false_positive": false,
       "false_negative": false
     }

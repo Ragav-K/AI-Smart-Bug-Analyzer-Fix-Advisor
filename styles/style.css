@@ -1,25 +1,60 @@
+/* ==========================================================================
+   AI Smart Bug Analyzer - deep teal theme
+
+   Layout is unchanged; only the palette differs. Two rules keep it stable:
+
+   1. Every custom property is namespaced `--ba-*`. Plain names like
+      `--primary` collide with variables Streamlit defines on its own
+      containers, which silently changes colours deep in the tree.
+   2. All colour lives in the variable block, so a value is defined once and
+      every component reads it from there.
+
+   The app is light-only by design. Streamlit's own theme is pinned to light
+   in .streamlit/config.toml; without that, its widgets would follow the
+   operating system into dark while these cards stayed light.
+   ========================================================================== */
+
 :root {
-    --primary: #2563eb;
-    --primary-dark: #1d4ed8;
-    --accent: #14b8a6;
-    --background: #f4f7fb;
-    --card: #ffffff;
-    --text: #111827;
-    --muted: #4b5563;
-    --border: #d8e0ea;
-    --shadow: 0 18px 44px rgba(15, 23, 42, 0.09);
-    --radius: 14px;
+    --ba-primary: #0f766e;
+    --ba-primary-hover: #115e59;
+    --ba-primary-deep: #134e4a;
+    --ba-on-primary: #ffffff;      /* text on a primary fill: 5.47:1 */
+    --ba-header-bg: #0f766e;
+
+    --ba-background: #f7faf9;
+    --ba-card: #ffffff;
+    --ba-sunken: #f4f8f7;
+    --ba-text: #10221f;
+    --ba-muted: #455854;
+    --ba-border: #d5e2df;
+    --ba-border-soft: #e2ebe9;
+    --ba-dashed: #a8c4bf;
+    --ba-tint: #d9eeea;
+
+    --ba-shadow: 0 18px 44px rgba(15, 61, 56, 0.08);
+    --ba-shadow-sm: 0 10px 24px rgba(15, 61, 56, 0.05);
+    --ba-focus: rgba(15, 118, 110, 0.16);
+    --ba-radius: 14px;
+
+    --ba-critical-bg: #fde2e1;
+    --ba-critical-fg: #8f231f;
+    --ba-high-bg: #fdead1;
+    --ba-high-fg: #7f3f11;
+    --ba-medium-bg: #fbf1cd;
+    --ba-medium-fg: #6b4d0e;
+    --ba-low-bg: #d7f0e3;
+    --ba-low-fg: #14603f;
+    --ba-neutral-bg: #eef2f1;
+    --ba-neutral-fg: #3d4f4b;
 }
 
 .stApp {
-    background:
-        linear-gradient(180deg, rgba(37, 99, 235, 0.09), rgba(244, 247, 251, 0) 340px),
-        var(--background);
-    color: var(--text);
+    background: var(--ba-background);
+    color: var(--ba-text);
 }
 
-[data-testid="stSidebar"],
-[data-testid="stExpandSidebarButton"] {
+/* Streamlit's rainbow strip is the framework's most recognisable default. */
+[data-testid="stDecoration"] {
     display: none;
 }
 
@@ -28,12 +63,12 @@ section.main > div {
     padding: 2rem 1.5rem 3rem;
 }
 
+/* Header ------------------------------------------------------------------ */
+
 .app-header {
-    background:
-        linear-gradient(135deg, rgba(37, 99, 235, 0.96), rgba(20, 184, 166, 0.86)),
-        #2563eb;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
+    background: var(--ba-header-bg);
+    border-radius: var(--ba-radius);
+    box-shadow: var(--ba-shadow);
     color: #ffffff;
     margin-bottom: 1.25rem;
     padding: 2.75rem;
@@ -42,31 +77,42 @@ section.main > div {
 .app-header h1 {
     color: #ffffff;
     font-size: clamp(2rem, 4vw, 3.4rem);
-    letter-spacing: 0;
     line-height: 1.05;
     margin: 0.3rem 0 0.85rem;
 }
 
+/* The generic markdown paragraph rule below matches this element too, at the
+   same specificity but later in the file, which left dark body text on the
+   teal header at 1.38:1. Qualifying the selector keeps the header readable
+   without resorting to !important. */
+[data-testid="stMarkdownContainer"] .app-header p,
 .app-header p {
-    color: rgba(255, 255, 255, 0.92);
+    color: rgba(255, 255, 255, 0.95);
     font-size: 1.08rem;
     margin: 0;
 }
 
+[data-testid="stMarkdownContainer"] .app-header h1,
+.app-header h1 {
+    color: #ffffff;
+}
+
 .eyebrow {
-    color: rgba(255, 255, 255, 0.92) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
     font-size: 0.78rem !important;
     font-weight: 800;
-    letter-spacing: 0;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
 }
 
+/* Cards ------------------------------------------------------------------- */
+
 .form-card,
 .result-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
+    background: var(--ba-card);
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius);
+    box-shadow: var(--ba-shadow);
     margin: 1rem 0 1.4rem;
     padding: 1.65rem;
 }
@@ -76,119 +122,135 @@ section.main > div {
 h2,
 h3,
 h4 {
-    color: var(--text);
-    letter-spacing: 0;
+    color: var(--ba-text);
 }
 
 [data-testid="stMarkdownContainer"] p,
-[data-testid="stCaptionContainer"],
 .stAlert {
-    color: var(--muted);
+    color: var(--ba-muted);
+}
+
+/* Streamlit fades captions with opacity: 0.6, which dropped this text to
+   2.8:1 against the page. Secondary weight is carried by the muted colour
+   instead, which stays legible. */
+[data-testid="stCaptionContainer"] {
+    color: var(--ba-muted);
+    opacity: 1 !important;
+}
+
+[data-testid="stCaptionContainer"] p {
+    color: var(--ba-muted) !important;
 }
 
 .stAlert {
     border-radius: 12px;
 }
 
+/* Form controls ----------------------------------------------------------- */
+
 [data-testid="stWidgetLabel"],
 [data-testid="stWidgetLabel"] p {
-    color: var(--text) !important;
+    color: var(--ba-text) !important;
     font-weight: 800 !important;
 }
 
 .stTextInput input,
 .stTextArea textarea,
 [data-testid="stFileUploader"] section {
-    background: #ffffff !important;
-    border: 1px solid var(--border) !important;
+    background: var(--ba-card) !important;
+    border: 1px solid var(--ba-border) !important;
     border-radius: 12px !important;
-    color: #111827 !important;
+    color: var(--ba-text) !important;
 }
 
 .stTextInput input,
 .stTextArea textarea {
-    box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.02);
-    caret-color: var(--primary) !important;
+    caret-color: var(--ba-primary) !important;
     font-size: 0.98rem !important;
 }
 
 .stTextInput input::placeholder,
 .stTextArea textarea::placeholder {
-    color: #4b5563 !important;
+    color: var(--ba-muted) !important;
     opacity: 1 !important;
 }
 
 .stTextInput input:focus,
 .stTextArea textarea:focus {
-    border-color: var(--primary) !important;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16) !important;
+    border-color: var(--ba-primary) !important;
+    box-shadow: 0 0 0 3px var(--ba-focus) !important;
 }
 
 [data-testid="stFileUploader"] section {
     align-items: center;
-    border: 1.5px dashed #b7c4d6 !important;
-    box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.04);
+    border: 1.5px dashed var(--ba-dashed) !important;
     min-height: 150px;
     padding: 1.3rem !important;
     transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 [data-testid="stFileUploader"] section:hover {
-    border-color: var(--primary) !important;
-    box-shadow: 0 14px 30px rgba(37, 99, 235, 0.09);
+    border-color: var(--ba-primary) !important;
+    box-shadow: var(--ba-shadow-sm);
     transform: translateY(-1px);
-}
-
-[data-testid="stFileUploader"] section button {
-    background: var(--primary) !important;
-    border: 1px solid var(--primary-dark) !important;
-    border-radius: 999px !important;
-    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22) !important;
-    color: #ffffff !important;
-    font-weight: 800 !important;
-}
-
-[data-testid="stFileUploader"] section button:hover {
-    background: var(--primary-dark) !important;
-    border-color: var(--primary-dark) !important;
-}
-
-[data-testid="stFileUploader"] section button p,
-[data-testid="stFileUploader"] section button span {
-    color: #ffffff !important;
 }
 
 [data-testid="stFileUploader"] small,
 [data-testid="stFileUploader"] p,
 [data-testid="stFileUploader"] span {
-    color: #374151 !important;
+    color: var(--ba-muted) !important;
 }
 
+/* Buttons ----------------------------------------------------------------- */
+/* One declaration per state, reading the fill and its text from the same
+   variable pair so the two can never drift apart. */
+
 .stButton > button,
-.stFormSubmitButton > button {
-    background: linear-gradient(135deg, var(--primary), var(--accent)) !important;
-    border: 0 !important;
-    border-radius: 12px !important;
-    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.24);
-    color: #ffffff !important;
-    font-size: 1rem !important;
-    font-weight: 850 !important;
-    min-height: 3.25rem;
-    transition: box-shadow 180ms ease, transform 180ms ease, filter 180ms ease;
+.stFormSubmitButton > button,
+[data-testid="stFileUploader"] section button {
+    background: var(--ba-primary) !important;
+    border: 1px solid var(--ba-primary) !important;
+    color: var(--ba-on-primary) !important;
+    font-weight: 800 !important;
+    transition: background 160ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 .stButton > button:hover,
-.stFormSubmitButton > button:hover {
-    box-shadow: 0 18px 34px rgba(37, 99, 235, 0.3);
-    filter: saturate(1.05);
+.stFormSubmitButton > button:hover,
+[data-testid="stFileUploader"] section button:hover {
+    background: var(--ba-primary-hover) !important;
+    border-color: var(--ba-primary-hover) !important;
+    color: var(--ba-on-primary) !important;
     transform: translateY(-1px);
 }
 
-.stDataFrame {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
+.stButton > button p,
+.stFormSubmitButton > button p,
+.stButton > button span,
+.stFormSubmitButton > button span,
+[data-testid="stFileUploader"] section button p,
+[data-testid="stFileUploader"] section button span {
+    color: var(--ba-on-primary) !important;
 }
+
+.stFormSubmitButton > button {
+    border-radius: 12px !important;
+    box-shadow: var(--ba-shadow-sm);
+    font-size: 1rem !important;
+    min-height: 3.25rem;
+}
+
+[data-testid="stFileUploader"] section button {
+    border-radius: 999px !important;
+}
+
+/* Progress ---------------------------------------------------------------- */
+
+[data-testid="stProgress"] div[role="progressbar"] > div {
+    background: var(--ba-primary) !important;
+}
+
+/* Grids ------------------------------------------------------------------- */
 
 .upload-grid,
 .stats-grid,
@@ -205,16 +267,16 @@ h4 {
 
 .summary-card,
 .detail-grid div {
-    background: var(--card);
-    border: 1px solid var(--border);
+    background: var(--ba-card);
+    border: 1px solid var(--ba-border);
     border-radius: 12px;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    box-shadow: var(--ba-shadow-sm);
     padding: 1rem;
 }
 
 .summary-card span,
 .detail-grid span {
-    color: var(--muted);
+    color: var(--ba-muted);
     display: block;
     font-size: 0.76rem;
     font-weight: 800;
@@ -224,9 +286,18 @@ h4 {
 
 .summary-card strong,
 .detail-grid strong {
-    color: var(--text);
+    color: var(--ba-text);
     overflow-wrap: anywhere;
 }
+
+.detail-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0.8rem 0 1rem;
+}
+
+/* Status badges ----------------------------------------------------------- */
+/* Severity keeps a conventional red/amber/green scale so status is never
+   read as branding. */
 
 .badge {
     border-radius: 999px;
@@ -234,17 +305,14 @@ h4 {
     padding: 0.38rem 0.72rem;
 }
 
-.severity-critical { background: #fee2e2; color: #991b1b !important; }
-.severity-high { background: #ffedd5; color: #9a3412 !important; }
-.severity-medium { background: #fef9c3; color: #854d0e !important; }
-.severity-low { background: #dcfce7; color: #166534 !important; }
-.priority-badge { background: #ede9fe; color: #5b21b6 !important; }
-.component-badge { background: #dbeafe; color: #1d4ed8 !important; }
+.severity-critical { background: var(--ba-critical-bg); color: var(--ba-critical-fg) !important; }
+.severity-high { background: var(--ba-high-bg); color: var(--ba-high-fg) !important; }
+.severity-medium { background: var(--ba-medium-bg); color: var(--ba-medium-fg) !important; }
+.severity-low { background: var(--ba-low-bg); color: var(--ba-low-fg) !important; }
+.priority-badge { background: var(--ba-tint); color: var(--ba-primary-deep) !important; }
+.component-badge { background: var(--ba-tint); color: var(--ba-primary-deep) !important; }
 
-.detail-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin: 0.8rem 0 1rem;
-}
+/* Uploads ----------------------------------------------------------------- */
 
 .upload-grid {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -253,8 +321,8 @@ h4 {
 
 .upload-card {
     align-items: center;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--ba-sunken);
+    border: 1px solid var(--ba-border-soft);
     border-radius: 12px;
     display: flex;
     gap: 0.8rem;
@@ -264,13 +332,13 @@ h4 {
 }
 
 .upload-card:hover {
-    border-color: #93c5fd;
-    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+    border-color: var(--ba-primary);
+    box-shadow: var(--ba-shadow-sm);
     transform: translateY(-1px);
 }
 
 .upload-card strong {
-    color: var(--text);
+    color: var(--ba-text);
     display: block;
     font-size: 0.95rem;
     line-height: 1.25;
@@ -278,7 +346,7 @@ h4 {
 }
 
 .upload-card span {
-    color: var(--muted);
+    color: var(--ba-muted);
     display: block;
     font-size: 0.82rem;
     margin-top: 0.25rem;
@@ -286,9 +354,9 @@ h4 {
 
 .file-icon {
     align-items: center;
-    background: #dbeafe;
+    background: var(--ba-tint);
     border-radius: 10px;
-    color: #1d4ed8;
+    color: var(--ba-primary-deep);
     display: inline-flex;
     flex: 0 0 48px;
     font-size: 0.72rem;
@@ -297,21 +365,23 @@ h4 {
     justify-content: center;
 }
 
+/* Search statistics ------------------------------------------------------- */
+
 .stats-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     margin: 0.75rem 0 1.2rem;
 }
 
 .stats-grid div {
-    background: #ffffff;
-    border: 1px solid var(--border);
+    background: var(--ba-card);
+    border: 1px solid var(--ba-border);
     border-radius: 12px;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    box-shadow: var(--ba-shadow-sm);
     padding: 1rem;
 }
 
 .stats-grid span {
-    color: var(--muted);
+    color: var(--ba-muted);
     display: block;
     font-size: 0.78rem;
     font-weight: 800;
@@ -320,11 +390,13 @@ h4 {
 }
 
 .stats-grid strong {
-    color: var(--text);
+    color: var(--ba-text);
     display: block;
     font-size: 1.05rem;
     overflow-wrap: anywhere;
 }
+
+/* Historical match cards -------------------------------------------------- */
 
 .result-card-header {
     align-items: center;
@@ -339,35 +411,24 @@ h4 {
     border-radius: 999px;
     display: inline-flex;
     font-size: 0.78rem;
-    font-weight: 850;
+    font-weight: 800;
     padding: 0.4rem 0.72rem;
 }
 
-.match-high {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.match-medium {
-    background: #fef9c3;
-    color: #854d0e;
-}
-
-.match-low {
-    background: #f3f4f6;
-    color: #374151;
-}
+.match-high { background: var(--ba-low-bg); color: var(--ba-low-fg); }
+.match-medium { background: var(--ba-medium-bg); color: var(--ba-medium-fg); }
+.match-low { background: var(--ba-neutral-bg); color: var(--ba-neutral-fg); }
 
 .result-card p {
-    color: var(--muted);
+    color: var(--ba-muted);
     line-height: 1.6;
     margin: 0.4rem 0 0.9rem;
 }
 
 .bug-id {
-    color: var(--primary-dark);
+    color: var(--ba-primary-deep);
     font-size: 0.86rem;
-    font-weight: 850;
+    font-weight: 800;
     margin-top: -0.25rem;
 }
 
@@ -378,29 +439,29 @@ h4 {
 }
 
 .result-meta span {
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
+    background: var(--ba-sunken);
+    border: 1px solid var(--ba-border-soft);
     border-radius: 10px;
-    color: #1f2937;
+    color: var(--ba-text);
     padding: 0.55rem 0.7rem;
 }
 
 .match-reasons {
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
+    background: var(--ba-sunken);
+    border: 1px solid var(--ba-border-soft);
     border-radius: 12px;
     margin-top: 0.85rem;
     padding: 0.85rem 1rem;
 }
 
 .match-reasons strong {
-    color: var(--text);
+    color: var(--ba-text);
     display: block;
     margin-bottom: 0.4rem;
 }
 
 .match-reasons ul {
-    color: var(--muted);
+    color: var(--ba-muted);
     margin: 0;
     padding-left: 1.1rem;
 }
@@ -409,12 +470,106 @@ h4 {
     margin: 0.18rem 0;
 }
 
+/* Expanders, tables, sidebar ---------------------------------------------- */
+
 [data-testid="stExpander"] {
-    background: #ffffff;
-    border: 1px solid var(--border);
+    background: var(--ba-card);
+    border: 1px solid var(--ba-border);
     border-radius: 12px;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+    box-shadow: none;
 }
+
+.stDataFrame {
+    border: 1px solid var(--ba-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* The sidebar carries submission history, which an earlier stylesheet hid
+   with display:none while the page kept rendering into it. */
+[data-testid="stSidebar"] {
+    background: var(--ba-card);
+    border-right: 1px solid var(--ba-border);
+}
+
+[data-testid="stSidebar"] .stButton > button {
+    background: var(--ba-sunken) !important;
+    border: 1px solid var(--ba-border) !important;
+    box-shadow: none !important;
+    color: var(--ba-text) !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    min-height: 2.5rem;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: var(--ba-tint) !important;
+    border-color: var(--ba-primary) !important;
+    color: var(--ba-text) !important;
+    transform: none;
+}
+
+[data-testid="stSidebar"] .stButton > button p {
+    color: var(--ba-text) !important;
+}
+
+/* Streamlit generates the page navigation from the pages/ directory and
+   renders inactive links at reduced alpha. Pin both states to full-strength
+   ink so the sidebar never reads as disabled. */
+[data-testid="stSidebarNav"] a,
+[data-testid="stSidebarNav"] span,
+[data-testid="stSidebarNavLink"] span {
+    color: var(--ba-text) !important;
+    opacity: 1 !important;
+}
+
+[data-testid="stSidebarNav"] a[aria-current="page"] span {
+    font-weight: 700 !important;
+}
+
+/* A rerun fades stale widgets. The default is faint enough to look broken
+   while a five-agent analysis runs, so the floor is raised. */
+[data-testid="stElementContainer"][data-stale="true"],
+.element-container[data-stale="true"],
+.stale-element {
+    opacity: 0.75 !important;
+}
+
+code {
+    background: var(--ba-tint) !important;
+    color: var(--ba-primary-deep) !important;
+}
+
+/* JSON viewer -------------------------------------------------------------
+   Streamlit renders st.json with a Solarized-derived palette tuned for a
+   darker canvas. On this near-white background its strings, numbers, keys
+   and booleans land between 3.0:1 and 4.4:1, so each hue is darkened to the
+   same tone while keeping the syntax categories distinguishable. */
+
+/* Strings carry their own class; every other value type is coloured by an
+   inline style on the value div, so those are set together. `!important`
+   is required here to win against the inline declaration. */
+
+[data-testid="stJson"] .string-value,
+.stJson .string-value {
+    color: #8f3410 !important;
+}
+
+[data-testid="stJson"] .variable-value div,
+.stJson .variable-value div {
+    color: #17567f !important;
+}
+
+[data-testid="stJson"] .variable-row > span,
+[data-testid="stJson"] .array-key,
+[data-testid="stJson"] .object-key,
+.stJson .variable-row > span,
+.stJson .array-key,
+.stJson .object-key {
+    color: #454a96 !important;
+}
+
+/* Responsive -------------------------------------------------------------- */
 
 @media (max-width: 760px) {
     section.main > div {
@@ -432,10 +587,7 @@ h4 {
         display: grid;
     }
 
-    .stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
+    .stats-grid,
     .agent-summary-grid,
     .detail-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -445,54 +597,9 @@ h4 {
 @media (max-width: 520px) {
     .stats-grid,
     .result-meta,
-    .upload-grid {
-        grid-template-columns: 1fr;
-    }
-
+    .upload-grid,
     .agent-summary-grid,
     .detail-grid {
         grid-template-columns: 1fr;
-    }
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --background: #0b1120;
-        --card: #111827;
-        --text: #f8fafc;
-        --muted: #cbd5e1;
-        --border: #334155;
-        --shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
-    }
-
-    .stApp {
-        background: linear-gradient(180deg, rgba(37, 99, 235, 0.16), transparent 340px), var(--background);
-    }
-
-    .stTextInput input,
-    .stTextArea textarea,
-    [data-testid="stFileUploader"] section,
-    .upload-card,
-    .stats-grid div,
-    .result-meta span,
-    .match-reasons,
-    [data-testid="stExpander"] {
-        background: #111827 !important;
-        border-color: var(--border) !important;
-        color: var(--text) !important;
-    }
-
-    .stTextInput input,
-    .stTextArea textarea,
-    .result-meta span {
-        color: var(--text) !important;
-    }
-
-    .stTextInput input::placeholder,
-    .stTextArea textarea::placeholder,
-    [data-testid="stFileUploader"] small,
-    [data-testid="stFileUploader"] p,
-    [data-testid="stFileUploader"] span {
-        color: #cbd5e1 !important;
     }
 }

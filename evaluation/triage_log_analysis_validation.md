@@ -90,9 +90,9 @@ no-exception controls.
 | Measure | Result |
 |---|---:|
 | Average Triage confidence | 84.50% |
-| Average Log Analysis confidence | 82.17% |
-| Mean end-to-end execution time | 0.007250 seconds |
-| P95 end-to-end execution time | 0.011217 seconds |
+| Average Log Analysis confidence | 80.37% |
+| Mean end-to-end execution time | 0.096545 seconds |
+| P95 end-to-end execution time | 0.092210 seconds |
 | Exception false positives | 0 |
 | Exception false negatives | 0 |
 
@@ -136,4 +136,4 @@ Generated artifacts:
 - `evaluation/evaluation_report.csv`
 - `evaluation/evaluation_summary.md`
 
-Generated at: `2026-07-20T11:41:11.847674+00:00`
+Generated at: `2026-08-05T13:43:17.953927+00:00`
