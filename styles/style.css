@@ -58,9 +58,41 @@
     display: none;
 }
 
-section.main > div {
-    max-width: 1180px;
-    padding: 2rem 1.5rem 3rem;
+/* Let the main column shrink to the space beside the sidebar.
+ *
+ * The app view is a flex row: the sidebar, then a wrapper holding the main
+ * column. That wrapper is a flex item with the default `min-width: auto`, so
+ * it refuses to shrink below its content width. On a 1366px screen it stayed
+ * 1190px wide next to a 256px sidebar -- 1446px of content in a 1366px window
+ * -- and the right-hand side of every card ran off the screen.
+ *
+ * `min-width: 0` is what lets a flex item shrink at all. The sidebar is a
+ * <section>, so `> div` reaches only the main wrapper and never the sidebar,
+ * whose width must stay fixed. */
+[data-testid="stAppViewContainer"] > div,
+[data-testid="stMain"] {
+    min-width: 0;
+}
+
+/* The main content column.
+ *
+ * Streamlit renamed this container: it was `section.main > div` and is now
+ * marked `data-testid="stMainBlockContainer"`. The old selector is kept beside
+ * the new one so either version lays out correctly. While it silently matched
+ * nothing, the width cap did not apply and the content stretched to the full
+ * width of the window.
+ *
+ * The cap keeps line lengths readable on a wide monitor. `!important` is
+ * needed because Streamlit sets `max-width: none` from its own generated
+ * class. Vertical padding is deliberately left to Streamlit: its larger top
+ * padding is what keeps the header clear of the floating toolbar. */
+section.main > div,
+[data-testid="stMainBlockContainer"] {
+    max-width: 1180px !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Header ------------------------------------------------------------------ */
@@ -546,6 +578,26 @@ code {
    and booleans land between 3.0:1 and 4.4:1, so each hue is darkened to the
    same tone while keeping the syntax categories distinguishable. */
 
+/* Wrap the code blocks rather than scrolling them sideways.
+ *
+ * Both st.code calls in the findings view pass language=None: one carries the
+ * recommended fix, the other a list of affected files. Neither is source code
+ * whose horizontal layout means anything. Left unwrapped, the recommendation
+ * -- the single most important thing this application produces -- ran to
+ * 2,066px inside a 1,132px block, so a reviewer had to scroll sideways to
+ * read the end of the sentence. */
+
+/* `!important` is required: Streamlit's own `.st-emotion-cache-<hash> code`
+ * rule ties this one on specificity and is injected later, so it would
+ * otherwise win and keep `white-space: pre` on the inner <code>. */
+[data-testid="stCode"] pre,
+[data-testid="stCode"] code,
+.stCode pre,
+.stCode code {
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere;
+}
+
 /* Strings carry their own class; every other value type is coloured by an
    inline style on the value div, so those are set together. `!important`
    is required here to win against the inline declaration. */
@@ -572,8 +624,10 @@ code {
 /* Responsive -------------------------------------------------------------- */
 
 @media (max-width: 760px) {
-    section.main > div {
-        padding: 1rem 0.9rem 2rem;
+    section.main > div,
+    [data-testid="stMainBlockContainer"] {
+        padding-left: 0.9rem !important;
+        padding-right: 0.9rem !important;
     }
 
     .app-header,
