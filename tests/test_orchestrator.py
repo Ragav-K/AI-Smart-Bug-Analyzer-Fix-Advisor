@@ -13,7 +13,13 @@ def test_integration_workflow():
     assert result["submission_id"] == "BUG-TEST-001"
     assert result["triage"]["component"] == "Authentication"
     assert result["log_analysis"]["exception_type"] == "AttributeError"
-    assert result["metadata"]["agents_executed"] == ["Triage", "LogAnalysis"]
+    assert result["metadata"]["agents_executed"] == [
+        "LogAnalysis",
+        "Triage",
+        "RootCause",
+        "DuplicateDetection",
+        "Remediation",
+    ]
     assert result["metadata"]["processing_time_seconds"] < 3
     assert result["metadata"]["future_agent_context"]
 
@@ -27,7 +33,12 @@ def test_one_agent_failure_does_not_stop_other():
     result = BugAnalysisOrchestrator(triage_agent=FailingAgent()).analyze("ValueError: bad value")
     assert result["triage"] is None
     assert result["log_analysis"]["exception_type"] == "ValueError"
-    assert result["metadata"]["agents_executed"] == ["LogAnalysis"]
+    assert result["metadata"]["agents_executed"] == [
+        "LogAnalysis",
+        "RootCause",
+        "DuplicateDetection",
+        "Remediation",
+    ]
     assert "Triage" in result["metadata"]["agent_errors"]
 
 
@@ -35,5 +46,4 @@ def test_dependency_injected_result_store():
     stored = []
     result = BugAnalysisOrchestrator(result_store=stored.append).analyze("Typo in UI button")
     assert stored and stored[0]["submission_id"] == "UNSAVED"
-    assert result["metadata"]["schema_version"] == "2.0"
-
+    assert result["metadata"]["schema_version"] == "3.0"
