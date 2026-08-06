@@ -10,7 +10,6 @@ from heapq import nlargest
 from pathlib import Path
 from typing import Any
 
-
 ROOT_DIR = Path(__file__).resolve().parents[1]
 GITBUGS_DIR = ROOT_DIR / "gitbugs"
 TOKEN_PATTERN = re.compile(r"[A-Za-z0-9_]+")
@@ -64,38 +63,17 @@ def find_similar_bugs(query: str, limit: int = 3) -> list[dict[str, Any]]:
             "description": bug["description"],
             "severity": bug["severity"],
             "source": bug["source"],
+            # Carried through so a historical fix -- in particular a confirmed
+            # fix written back into the knowledge base -- can still ground a
+            # recommendation when retrieval runs on the fallback path.
+            "resolution": bug["resolution"],
+            "root_cause": bug["root_cause"],
+            "status": bug["status"],
+            "labels": bug["labels"],
             "similarity": round(score, 2),
         }
         for score, bug in top_matches
     ]
-
-
-def build_bug_answer(text: str) -> dict[str, str]:
-    """Create a short local advisor response from the submitted bug text."""
-    lower_text = text.lower()
-    error_line = extract_error_line(text)
-
-    if "nonetype" in lower_text or "none" in lower_text:
-        likely_cause = "A value is missing or None where the code expects a valid object or number."
-        suggested_fix = "Validate inputs before using them, and skip or handle records with missing values."
-    elif "nameerror" in lower_text or "not defined" in lower_text:
-        likely_cause = "The code is using a variable, function, or import before it is defined."
-        suggested_fix = "Check spelling, imports, and variable scope for the undefined name."
-    elif "typeerror" in lower_text:
-        likely_cause = "The code is applying an operation to an incompatible data type."
-        suggested_fix = "Check the value types before the failing operation and convert or guard them."
-    elif "indexerror" in lower_text:
-        likely_cause = "The code is accessing a list or sequence position that does not exist."
-        suggested_fix = "Check the sequence length before indexing."
-    else:
-        likely_cause = "The submitted bug needs review against similar historical reports."
-        suggested_fix = "Compare the closest past bugs below and inspect the failing input path."
-
-    return {
-        "detected_error": error_line or "No explicit error line detected.",
-        "likely_cause": likely_cause,
-        "suggested_fix": suggested_fix,
-    }
 
 
 @lru_cache(maxsize=1)
@@ -104,17 +82,46 @@ def load_bug_records() -> tuple[dict[str, Any], ...]:
     if not GITBUGS_DIR.exists():
         return tuple(records)
 
-    for csv_path in sorted(GITBUGS_DIR.glob("*/*_bugs.csv")):
-        source = csv_path.parent.name
-        records.extend(load_bug_csv(csv_path, source))
+    # Read every dataset file rather than one filename pattern. The full
+    # per-project exports are too large to commit, so a fresh clone has only
+    # gitbugs/samples/; both must resolve through the same loader.
+    # The samples are a subset of the full exports, so both can be present on
+    # a development machine. Key on project and issue id to avoid returning
+    # the same historical defect twice.
+    seen: set[tuple[str, str]] = set()
+    for csv_path in sorted(GITBUGS_DIR.glob("*/*.csv")):
+        source = project_name(csv_path)
+        for record in load_bug_csv(csv_path, source):
+            key = (source, record["issue_id"] or record["summary"])
+            if key in seen:
+                continue
+            seen.add(key)
+            records.append(record)
 
     return tuple(records)
+
+
+def project_name(csv_path: Path) -> str:
+    """Name the project by folder, or by filename inside the samples folder."""
+    if csv_path.parent.name == "samples":
+        return csv_path.stem.replace("_bugs_sample", "")
+    return csv_path.parent.name
+
+
+def has_searchable_columns(fieldnames: list[str] | None) -> bool:
+    """Reject datasets that carry no retrievable text, such as the
+    *-combined.csv duplicate-id files, which would otherwise be loaded as
+    thousands of empty records."""
+    columns = {str(name or "").strip().lower() for name in fieldnames or []}
+    return bool(columns & {"summary", "description"})
 
 
 def load_bug_csv(csv_path: Path, source: str) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     with csv_path.open("r", encoding="utf-8", errors="replace", newline="") as file:
         reader = csv.DictReader(file)
+        if not has_searchable_columns(reader.fieldnames):
+            return records
         for index, row in enumerate(reader):
             if index >= MAX_ROWS_PER_CSV:
                 break
@@ -134,6 +141,10 @@ def load_bug_csv(csv_path: Path, source: str) -> list[dict[str, Any]]:
                         row.get("Priority") or row.get("Status") or row.get("Resolution") or "unknown"
                     ),
                     "source": source,
+                    "resolution": clean_text(row.get("Resolution", ""))[:MAX_DESCRIPTION_CHARS],
+                    "root_cause": clean_text(row.get("Root cause", ""))[:MAX_DESCRIPTION_CHARS],
+                    "status": clean_text(row.get("Status", "")),
+                    "labels": clean_text(row.get("Component") or row.get("Labels") or ""),
                     "vector": vector,
                     "norm": vector_norm(vector),
                 }
@@ -168,14 +179,6 @@ def cosine_similarity(
 
     dot_product = sum(weight * right.get(token, 0) for token, weight in left.items())
     return dot_product / (left_norm * right_norm)
-
-
-def extract_error_line(text: str) -> str:
-    for line in text.splitlines():
-        stripped = line.strip("# ").strip()
-        if any(marker in stripped for marker in ["Error", "Exception", "Traceback", "TypeError", "NameError"]):
-            return stripped
-    return ""
 
 
 def clean_text(value: Any) -> str:

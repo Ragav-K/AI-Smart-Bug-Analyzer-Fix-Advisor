@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 
-
 COMPONENT_KEYWORDS: dict[str, tuple[str, ...]] = {
     "Authentication": ("login", "log in", "password", "token", "oauth", "jwt", "session", "signin"),
     "Authorization": ("permission", "forbidden", "access denied", "role", "rbac", "unauthorized"),
@@ -36,7 +35,14 @@ def component_scores(text: str) -> tuple[dict[str, int], dict[str, list[str]]]:
     scores: dict[str, int] = {}
     evidence: dict[str, list[str]] = {}
     for component, keywords in COMPONENT_KEYWORDS.items():
-        hits = [keyword for keyword in keywords if re.search(rf"(?<!\w){re.escape(keyword)}(?!\w)", normalized)]
+        # Accept the regular plural of each keyword. Reporters write
+        # "notifications" and "permissions" far more often than the singular,
+        # and a strict word boundary was classifying those as "Other".
+        hits = [
+            keyword
+            for keyword in keywords
+            if re.search(rf"(?<!\w){re.escape(keyword)}e?s?(?!\w)", normalized)
+        ]
         evidence[component] = hits
         scores[component] = sum(3 if " " in hit else 2 for hit in hits)
     return scores, evidence

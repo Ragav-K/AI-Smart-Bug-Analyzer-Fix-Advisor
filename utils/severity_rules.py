@@ -4,12 +4,17 @@ from __future__ import annotations
 
 import re
 
-
 SEVERITY_RULES: dict[str, dict[str, int]] = {
     "Critical": {
         "production outage": 10, "system down": 10, "data loss": 10,
         "data corruption": 10, "security vulnerability": 10,
-        "payment failure": 9, "payments failing": 9, "cannot login": 8,
+        # Reporters phrase the same payment outage as a noun or a verb, so both
+        # forms carry the same weight. End-to-end validation found "payment
+        # fails for all customers" triaged as Medium purely because only the
+        # noun form was listed.
+        "payment failure": 9, "payments failing": 9,
+        "payment fails": 9, "payments fail": 9,
+        "cannot login": 8,
         "unable to log in": 8, "authentication completely broken": 10,
         "memory leak": 7, "application crash": 7, "crashes": 6,
         "ransomware": 10, "breach": 10,
@@ -17,6 +22,7 @@ SEVERITY_RULES: dict[str, dict[str, int]] = {
     "High": {
         "major feature": 7, "unusable": 7, "database unavailable": 8,
         "connection refused": 6, "repeated": 4, "all users": 7,
+        "all customers": 7, "every customer": 7,
         "many users": 6, "cannot complete": 7, "unable to complete": 7,
         "timeout": 4, "service unavailable": 7, "500 internal": 6,
         "significant performance": 6, "api failure": 6,
@@ -43,7 +49,7 @@ def score_severity(text: str) -> tuple[dict[str, int], dict[str, list[str]]]:
     guarded = normalized
     for phrase in NEGATIONS:
         guarded = guarded.replace(phrase, " ")
-    scores = {level: 0 for level in SEVERITY_RULES}
+    scores = dict.fromkeys(SEVERITY_RULES, 0)
     matches: dict[str, list[str]] = {level: [] for level in SEVERITY_RULES}
     for level, rules in SEVERITY_RULES.items():
         for phrase, weight in rules.items():

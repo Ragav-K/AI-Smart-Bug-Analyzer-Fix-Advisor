@@ -8,7 +8,6 @@ from pathlib import Path
 
 from utils.language_detector import detect_language
 
-
 MAX_LOG_CHARS = 1_000_000
 MAX_FRAMES = 200
 
@@ -52,10 +51,38 @@ def parse_log(log_text: str | None) -> ParsedLog:
         parsed = _parse_javascript(original, language)
     else:
         parsed = _parse_fallback(original)
+    _recover_embedded_exception(parsed, original)
     parsed.warnings.extend(warnings)
     if len(parsed.frames) >= MAX_FRAMES:
         parsed.warnings.append(f"Call stack limited to {MAX_FRAMES} frames.")
     return parsed
+
+
+def _recover_embedded_exception(parsed: ParsedLog, text: str) -> None:
+    """Recover an exception the language parser could not see at line start.
+
+    The per-language exception patterns are line-anchored, which is what keeps
+    them from quoting prose back as an exception. Real logs routinely break
+    that assumption by prefixing the line with a level or field name:
+
+        FATAL: SecurityError: signed URL validation bypassed
+        stack: java.io.IOException: No space left on device
+
+    Those lines carry a perfectly identifiable exception, so when the chosen
+    parser found none at all, the unanchored generic scanner gets a turn. It
+    runs only in that case, so a successful language-specific parse is never
+    overridden by a weaker match.
+    """
+    if parsed.exception_type or parsed.root_exception:
+        return
+    match = list(GENERIC_EXCEPTION.finditer(text))
+    if not match:
+        return
+    found = match[-1]
+    exception = found.group("type").split(".")[-1]
+    parsed.exception_type = exception
+    parsed.root_exception = exception
+    parsed.error_message = parsed.error_message or found.group("message").strip()
 
 
 def _parse_python(text: str) -> ParsedLog:
@@ -65,6 +92,10 @@ def _parse_python(text: str) -> ParsedLog:
         for match in PYTHON_FRAME.finditer(text)
     ][-MAX_FRAMES:]
     exceptions = list(PYTHON_EXCEPTION.finditer(text))
+    # In a chained Python traceback ("During handling of the above exception")
+    # the final exception is the one that actually propagated, so it is both
+    # what surfaced and what should be acted on. This differs from Java, where
+    # the deepest "Caused by:" link is the root.
     root = exceptions[-1] if exceptions else None
     return ParsedLog(
         language="Python",
@@ -87,11 +118,14 @@ def _parse_java(text: str) -> ParsedLog:
             "raw": match.group(0).strip(),
         })
     exceptions = list(JAVA_EXCEPTION.finditer(text))
+    # The first entry is the exception that surfaced; the last is the deepest
+    # "Caused by:" link. Reporting both keeps the chain visible.
+    thrown = exceptions[0] if exceptions else None
     root = exceptions[-1] if exceptions else None
     return ParsedLog(
         language="Java",
-        exception_type=root.group("type").split(".")[-1] if root else None,
-        error_message=(root.group("message") or "").strip() or None if root else None,
+        exception_type=thrown.group("type").split(".")[-1] if thrown else None,
+        error_message=(thrown.group("message") or "").strip() or None if thrown else None,
         root_exception=root.group("type").split(".")[-1] if root else None,
         frames=frames[:MAX_FRAMES],
     )
@@ -129,7 +163,13 @@ def _parse_fallback(text: str) -> ParsedLog:
 
 
 def _fallback_error_line(text: str) -> str | None:
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    # Ignore structural lines such as a lone brace, which carry no diagnostic
+    # meaning but would otherwise be quoted back as the failure.
+    lines = [
+        line.strip()
+        for line in text.splitlines()
+        if len(line.strip()) > 3 and re.search(r"[A-Za-z]", line)
+    ]
     error_lines = [line for line in lines if re.search(r"\b(error|failed|fatal)\b", line, re.IGNORECASE)]
     return (error_lines[-1] if error_lines else lines[-1] if lines else None)
 

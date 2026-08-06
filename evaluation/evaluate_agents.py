@@ -9,9 +9,8 @@ import statistics
 import sys
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
@@ -145,7 +144,9 @@ def evaluate(output_dir: Path | None = None) -> dict:
             "false_negative": case.exception_type is not None and predicted_exception is None,
         })
     count = len(rows)
-    accuracy = lambda field: round(sum(bool(row[field]) for row in rows) / count, 4)
+    def accuracy(field: str) -> float:
+        return round(sum(bool(row[field]) for row in rows) / count, 4)
+
     report = {
         "dataset_size": count, "severity_accuracy": accuracy("severity_correct"),
         "priority_accuracy": accuracy("priority_correct"), "component_accuracy": accuracy("component_correct"),
@@ -164,7 +165,7 @@ def evaluate(output_dir: Path | None = None) -> dict:
         "p95_execution_time_seconds": round(sorted(row["execution_time_seconds"] for row in rows)[int(count * .95) - 1], 6),
         "false_positives": sum(row["false_positive"] for row in rows),
         "false_negatives": sum(row["false_negative"] for row in rows),
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
     }
     (output_dir / "evaluation_report.json").write_text(json.dumps({"summary": report, "cases": rows}, indent=2), encoding="utf-8")
     with (output_dir / "evaluation_report.csv").open("w", newline="", encoding="utf-8") as output:

@@ -1,10 +1,30 @@
-streamlit
-pydantic>=1.10,<3
-Pillow
-pandas
-chromadb
-sentence-transformers
-PyPDF2
-python-docx
-openpyxl
-pytest
+# Lower bounds are pinned to the versions this project is tested against, so a
+# fresh install cannot silently resolve to an older release with a different
+# API. Upper bounds are omitted except where a future major version is known to
+# break compatibility, which keeps security patches installable.
+
+# Web application
+streamlit>=1.46
+
+# Data models and validation
+pydantic>=2.11,<3
+
+# Retrieval and embeddings
+chromadb>=1.5
+sentence-transformers>=5.6
+
+# Dataset loading
+pandas>=2.2
+openpyxl>=3.1
+
+# Uploaded document parsing
+# pypdf is the maintained continuation of the end-of-life PyPDF2 and exposes
+# the same PdfReader interface.
+pypdf>=6.0
+python-docx>=1.2
+Pillow>=11.0
+
+# Testing and linting
+pytest>=8.0
+pytest-cov>=6.0
+ruff>=0.16

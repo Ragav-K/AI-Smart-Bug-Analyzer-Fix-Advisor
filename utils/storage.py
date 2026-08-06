@@ -8,7 +8,6 @@ from typing import Any
 
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
-
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT_DIR / "data"
 UPLOAD_DIR = ROOT_DIR / "uploads"
@@ -43,6 +42,22 @@ def save_report(record: dict[str, Any]) -> None:
         json.dumps(reports, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
+
+
+def update_report(submission_id: str, updates: dict[str, Any]) -> bool:
+    """Merge fields into a saved report and return whether it was found."""
+    reports = load_reports()
+    matched = False
+    for report in reports:
+        if str(report.get("submission_id")) == str(submission_id):
+            report.update(updates)
+            matched = True
+    if matched:
+        REPORTS_PATH.write_text(
+            json.dumps(reports, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+    return matched
 
 
 def generate_submission_id() -> str:

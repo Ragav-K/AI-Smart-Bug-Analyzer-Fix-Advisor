@@ -1,0 +1,42 @@
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+exclude = ["gitbugs", "data", "uploads", "sample_uploads", "__pycache__"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors (PEP 8)
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes: undefined names, unused imports and variables
+    "I",    # isort: import ordering
+    "B",    # bugbear: likely bugs such as mutable defaults
+    "UP",   # pyupgrade: outdated syntax for the target version
+    "C4",   # comprehension simplifications
+    "RET",  # unnecessary branches around return
+    "SIM",  # simplifiable constructs
+]
+ignore = [
+    # Fault isolation is a deliberate design property of this pipeline: an
+    # agent failure is caught, recorded in metadata.agent_errors, and logged
+    # with a traceback so one failing agent cannot abort the other four.
+    "BLE001",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# The long lines in these files are irreducible data, not dense logic: single
+# regular expressions, labelled bug fixtures, recommendation prose, and inline
+# HTML. Wrapping them would obscure the value being expressed, so E501 is
+# relaxed here rather than enforced with awkward continuations.
+"tests/*" = ["E501"]
+"utils/parser.py" = ["E501"]              # one stack-trace regex per line
+"agents/remediation_agent.py" = ["E501"]  # recommendation and best-practice text
+"evaluation/*" = ["E501"]                 # labelled evaluation fixtures
+"scripts/demo_milestone4.py" = ["E501"]   # demo narration strings
+"pages/bug_submission.py" = ["E501"]      # inline HTML copy
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = [
+    "ignore::DeprecationWarning:PyPDF2",
+]
