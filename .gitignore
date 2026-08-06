@@ -34,8 +34,14 @@ data/*.json
 data/chroma_*/
 uploads/
 
-# Large source datasets (keep the smaller *-combined.csv samples)
-gitbugs/**/*_bugs.csv
+# Confirmed fixes learned from resolved submissions. Like saved reports, this
+# is per-deployment operational data, not part of the shipped corpus.
+gitbugs/learned/
+
+# Large source datasets (~491 MB). The committed knowledge base is
+# gitbugs/samples/, regenerated with scripts/build_sample_corpus.py.
+gitbugs/*/*_bugs.csv
+!gitbugs/samples/
 
 # OS/editor files
 .DS_Store

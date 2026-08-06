@@ -1,0 +1,16 @@
+Environment: Python 3.11.4 / Ubuntu 22.04 / reporting-service v2.3.1
+Trigger: nightly invoice export job, ~200 of 15,000 records affected
+
+Traceback (most recent call last):
+  File "/srv/reporting/jobs/nightly.py", line 61, in run
+    export_invoices(batch)
+  File "/srv/reporting/export.py", line 34, in export_invoices
+    rows = [build_row(record) for record in records]
+  File "/srv/reporting/export.py", line 34, in <listcomp>
+    rows = [build_row(record) for record in records]
+  File "/srv/reporting/export.py", line 48, in build_row
+    total = record["totals"]["grand_total"]
+KeyError: 'grand_total'
+
+Expected: invoices without a computed grand total should be skipped and counted,
+not abort the whole export batch.

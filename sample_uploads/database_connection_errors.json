@@ -1,0 +1,24 @@
+{
+  "service": "orders-api",
+  "environment": "production",
+  "window": "2026-08-03T14:20:00Z/2026-08-03T14:35:00Z",
+  "summary": "Connection pool exhausted during peak checkout traffic; all users affected.",
+  "events": [
+    {
+      "timestamp": "2026-08-03T14:22:11Z",
+      "level": "WARN",
+      "message": "HikariPool-1 - Connection is not available, request timed out after 30000ms"
+    },
+    {
+      "timestamp": "2026-08-03T14:22:41Z",
+      "level": "ERROR",
+      "message": "java.sql.SQLException: Timeout acquiring connection from pool",
+      "stack_trace": "java.sql.SQLException: Timeout acquiring connection from pool\n\tat com.app.db.ConnectionPool.acquire(ConnectionPool.java:118)\n\tat com.app.orders.OrderRepository.findByCustomer(OrderRepository.java:64)\n\tat com.app.orders.OrderService.listOrders(OrderService.java:29)"
+    },
+    {
+      "timestamp": "2026-08-03T14:24:03Z",
+      "level": "ERROR",
+      "message": "Service unavailable: database unavailable, returning 503 to all users"
+    }
+  ]
+}
