@@ -7,23 +7,29 @@ from typing import Any
 
 import streamlit as st
 
-from agents.orchestrator import BugAnalysisOrchestrator
+from ui.analytics import render_analytics_dashboard, render_knowledge_growth_panel
+from ui.findings import render_findings_dashboard
 from utils.helpers import format_file_size, load_css
+from utils.logging_config import get_agent_logger
 from utils.rag_search import (
+    INDEX_READY_MARKER,
     MODEL_NAME,
+    VECTOR_DIR,
     extract_uploaded_text,
-    get_vector_collection,
     is_vector_index_ready,
     search_similar_bugs,
+    warm_retrieval_backend,
 )
 from utils.storage import (
     ensure_project_structure,
     generate_submission_id,
+    load_reports,
     save_report,
     save_uploaded_file,
 )
 from utils.validators import validate_submission
 
+LOGGER = get_agent_logger(__name__)
 
 FILE_TYPES = [
     "txt",
@@ -48,14 +54,25 @@ def render_bug_submission() -> None:
     """Render bug submission, RAG search, and automatic multi-agent analysis."""
     ensure_project_structure()
     configure_page()
+    # Start loading the embedding model now, in the background, so it is ready
+    # by the time the first report is submitted rather than costing that
+    # submission a timeout and a silent fallback.
+    warm_retrieval_backend()
     render_header()
     render_knowledge_base_status()
 
-    if "last_submission" not in st.session_state:
-        st.session_state.last_submission = None
     if "analysis_history" not in st.session_state:
-        st.session_state.analysis_history = []
+        saved_reports = [
+            report
+            for report in reversed(load_reports())
+            if report.get("analysis")
+        ][:25]
+        st.session_state.analysis_history = saved_reports
+    if "last_submission" not in st.session_state:
+        history = st.session_state.analysis_history
+        st.session_state.last_submission = history[0] if history else None
 
+    render_sidebar()
     render_submission_form()
 
     if st.session_state.last_submission:
@@ -66,7 +83,7 @@ def configure_page() -> None:
         page_title="AI Smart Bug Analyzer & Fix Advisor",
         page_icon="BUG",
         layout="wide",
-        initial_sidebar_state="collapsed",
+        initial_sidebar_state="expanded",
     )
     css = load_css()
     if css:
@@ -74,38 +91,64 @@ def configure_page() -> None:
 
 
 def render_knowledge_base_status() -> None:
-    try:
-        collection = get_vector_collection(build_if_missing=False)
-        indexed_count = collection.count()
-    except Exception:
-        st.warning("Historical Defect Knowledge Base is not available yet.")
+    # Opening ChromaDB here made every fresh page load wait for the full
+    # database dependency stack. The marker is written only after a successful
+    # index build, so a filesystem check is sufficient for startup status.
+    if is_vector_index_ready():
+        st.caption("Historical Defect Knowledge Base ready (semantic retrieval).")
         return
 
-    if indexed_count and is_vector_index_ready():
-        st.caption(f"Historical Defect Knowledge Base ready: {indexed_count:,} defects indexed.")
-    elif indexed_count:
-        st.info(
-            f"Historical Defect Knowledge Base build is incomplete "
-            f"({indexed_count:,} defects indexed). Searches will use the fast local fallback."
-        )
+    if VECTOR_DIR.exists() and any(
+        path != INDEX_READY_MARKER for path in VECTOR_DIR.iterdir()
+    ):
+        message = "Historical Defect Knowledge Base build is incomplete."
     else:
-        st.info(
-            "Historical Defect Knowledge Base is ready to initialize. "
-            "Until the offline index is built, searches will use the fast local fallback."
-        )
+        message = "Historical Defect Knowledge Base has not been indexed yet."
+    st.info(
+        f"{message} Searches use the local token fallback until the index is "
+        "built. Build it once with:  python scripts/build_index.py"
+    )
 
 
 def render_header() -> None:
     st.markdown(
         """
         <section class="app-header">
-            <p class="eyebrow">Milestone 2 - Multi-Agent Bug Intelligence</p>
-            <h1>AI Smart Bug Analyzer & Fix Advisor</h1>
-            <p>Submit once to triage impact, interpret logs, and search similar historical defects.</p>
+            <p class="eyebrow">Milestone 4 - Defect Pattern Analytics &amp; a Growing Knowledge Base</p>
+            <h1>AI Smart Bug Analyzer &amp; Fix Advisor</h1>
+            <p>Trace the failure, identify its cause, detect duplicates, recommend an evidence-backed fix, and learn from every confirmed resolution.</p>
         </section>
         """,
         unsafe_allow_html=True,
     )
+
+
+def render_sidebar() -> None:
+    """Render recent submission history and pipeline status."""
+    with st.sidebar:
+        st.header("Analysis workspace")
+        latest = st.session_state.get("last_submission") or {}
+        analysis = latest.get("analysis") or {}
+        executed = (analysis.get("metadata") or {}).get("agents_executed") or []
+        if latest:
+            st.caption(f"Current: {latest.get('submission_id', 'Unknown')}")
+            st.progress(min(1.0, len(executed) / 5))
+            st.write(f"{len(executed)}/5 agents completed")
+        else:
+            st.caption("Submit a bug to start the five-agent pipeline.")
+        st.divider()
+        st.subheader("Submission history")
+        history = st.session_state.get("analysis_history") or []
+        if not history:
+            st.caption("No analyzed submissions have been saved yet.")
+        for item in history[:10]:
+            if st.button(
+                f"{item.get('submission_id', 'Unknown')} · {shorten(item.get('bug_title', 'Untitled'), 28)}",
+                key=f"history-{item.get('submission_id')}",
+                use_container_width=True,
+            ):
+                st.session_state.last_submission = item
+                st.rerun()
 
 
 def render_submission_form() -> None:
@@ -232,6 +275,7 @@ def handle_submission(draft_record: dict[str, Any]) -> None:
             st.error(error)
         return
 
+    submission_id: str | None = None
     try:
         with st.spinner("Reading uploaded files..."):
             uploaded_text_parts = [
@@ -246,7 +290,7 @@ def handle_submission(draft_record: dict[str, Any]) -> None:
         search_started = time.perf_counter()
         try:
             with st.spinner("Searching historical defects..."):
-                similar_bugs = search_similar_bugs(submitted_text, limit=5)
+                similar_bugs = search_similar_bugs(submitted_text, limit=10)
                 first_match = similar_bugs[0] if similar_bugs else {}
                 search_backend = first_match.get("search_backend", MODEL_NAME)
                 indexed_count = int(first_match.get("historical_bugs_indexed", 0))
@@ -289,12 +333,23 @@ def handle_submission(draft_record: dict[str, Any]) -> None:
             "timestamp": datetime.now().isoformat(timespec="seconds"),
         }
 
-        with st.spinner("Running Triage and Log Analysis agents..."):
+        with st.status("Running the five-agent analysis pipeline...", expanded=True) as status:
+            # Agent schemas and Pydantic models are needed only after the user
+            # submits a report, not while the web form is starting.
+            from agents.orchestrator import BugAnalysisOrchestrator
+
+            st.write("Interpreting logs and triaging impact")
             record["analysis"] = BugAnalysisOrchestrator().analyze(record, submission_id)
+            st.write("Grounding root cause, duplicates, and remediation")
+            status.update(label="Analysis complete", state="complete", expanded=False)
 
         save_report(record)
-    except Exception:
-        st.error("Unable to submit the bug report. Please verify the uploaded files and try again.")
+    except Exception as error:
+        # The operator needs the real cause; the previous generic message made a
+        # model failure, a disk error, and a validation error indistinguishable.
+        LOGGER.exception("Bug submission failed", extra={"submission_id": submission_id or "UNSAVED"})
+        st.error(f"Unable to submit the bug report: {type(error).__name__}: {error}")
+        st.caption("The full traceback was written to the application log.")
         return
 
     st.session_state.last_submission = record
@@ -331,119 +386,66 @@ def build_search_query(record: dict[str, Any], uploaded_text_parts: list[str]) -
 
 def render_results(record: dict[str, Any]) -> None:
     st.markdown("## AI Analysis Dashboard")
-    render_analysis_dashboard(record.get("analysis") or {})
+    render_findings_dashboard(record.get("analysis") or {}, record)
     st.markdown("## Historical Knowledge Search")
     render_search_statistics(record.get("search_stats", {}))
     st.markdown("## Top Similar Historical Bugs")
-    similar_bugs = record.get("similar_bugs") or []
+    render_similar_bugs(record.get("similar_bugs") or [])
+
+    st.markdown("## Confirm the Fix (Knowledge Base Growth)")
+    render_knowledge_growth_panel(record)
+
+    st.markdown("## Defect Pattern Analytics")
+    st.caption(
+        "Recurring themes, high-frequency components, and systemic issues measured "
+        "across every analyzed submission."
+    )
+    render_analytics_dashboard(load_reports())
+
+
+def render_similar_bugs(similar_bugs: list[dict[str, Any]]) -> None:
     if not similar_bugs:
         st.info(
             "No similar historical defects were found.\n\n"
             "Your submitted bug appears to be unique.\n\n"
-            "It can be added to improve the historical defect knowledge base in future."
+            "Confirm its fix below to add it to the historical defect knowledge base."
         )
         return
 
-    for index, bug in enumerate(similar_bugs, start=1):
+    for index, bug in enumerate(similar_bugs[:5], start=1):
         render_similarity_card(index, bug)
-
-
-def render_analysis_dashboard(analysis: dict[str, Any]) -> None:
-    """Render the stable orchestrator response as an issue-tracker dashboard."""
-    triage = analysis.get("triage") or {}
-    log_analysis = analysis.get("log_analysis") or {}
-    metadata = analysis.get("metadata") or {}
-    if not triage and not log_analysis:
-        st.warning("Agent analysis is unavailable for this submission.")
-        return
-
-    if triage:
-        st.markdown(
-            f"""
-            <section class="agent-summary-grid">
-                <div class="summary-card"><span>Severity</span><strong class="badge severity-{escape_html(str(triage.get('severity', 'medium')).lower())}">{escape_html(triage.get('severity', 'Unknown'))}</strong></div>
-                <div class="summary-card"><span>Priority</span><strong class="badge priority-badge">{escape_html(triage.get('priority', 'Unknown'))}</strong></div>
-                <div class="summary-card"><span>Component</span><strong class="badge component-badge">{escape_html(triage.get('component', 'Other'))}</strong></div>
-                <div class="summary-card"><span>Processing Time</span><strong>{float(metadata.get('processing_time_seconds', 0)):.3f}s</strong></div>
-            </section>
-            """,
-            unsafe_allow_html=True,
-        )
-        left, right = st.columns([2, 1])
-        with left:
-            st.markdown("### Triage Agent")
-            st.markdown(f"**Business impact:** {triage.get('business_impact', 'Not determined')}")
-            st.info(triage.get("reasoning", "No explanation available."))
-        with right:
-            confidence = int(triage.get("confidence", 0))
-            st.metric("Triage Confidence", f"{confidence}%")
-            st.progress(confidence / 100)
-        evidence = triage.get("evidence") or []
-        if evidence:
-            st.markdown("#### Supporting Evidence")
-            st.dataframe(
-                [{"Signal": signal, "Source": "Report / stack trace"} for signal in evidence],
-                hide_index=True,
-                use_container_width=True,
-            )
-
-    if log_analysis:
-        st.markdown("### Log Analysis Agent")
-        first, second, third = st.columns(3)
-        first.metric("Exception", log_analysis.get("exception_type") or "Not detected")
-        second.metric("Language", log_analysis.get("language") or "Unknown")
-        third.metric("Confidence", f"{int(log_analysis.get('confidence', 0))}%")
-        st.markdown(
-            f"""
-            <section class="detail-grid">
-                <div><span>Error Message</span><strong>{escape_html(log_analysis.get('error_message') or 'Not available')}</strong></div>
-                <div><span>Failure Point</span><strong>{escape_html(log_analysis.get('failure_point') or 'Not available')}</strong></div>
-                <div><span>File / Line</span><strong>{escape_html(log_analysis.get('file') or 'Unknown')} : {escape_html(log_analysis.get('line') or '-')}</strong></div>
-                <div><span>Function / Method</span><strong>{escape_html(log_analysis.get('function') or 'Unknown')}</strong></div>
-                <div><span>Code Module</span><strong>{escape_html(log_analysis.get('module') or 'Unknown')}</strong></div>
-                <div><span>Probable Product Area</span><strong>{escape_html(log_analysis.get('probable_module') or 'Other')}</strong></div>
-            </section>
-            """,
-            unsafe_allow_html=True,
-        )
-        st.warning(f"**Root cause hint:** {log_analysis.get('probable_cause', 'Not enough evidence.')}")
-        with st.expander("Call Stack Summary", expanded=True):
-            for step in log_analysis.get("call_stack_summary") or []:
-                st.markdown(f"- {step}")
-        for warning in log_analysis.get("warnings") or []:
-            st.caption(f"Parser note: {warning}")
-
-    errors = metadata.get("agent_errors") or {}
-    if errors:
-        st.warning("Some agents could not complete: " + ", ".join(errors))
-    with st.expander("Raw Analysis JSON"):
-        st.json(analysis)
 
 
 def render_similarity_card(index: int, bug: dict[str, Any]) -> None:
     title = bug.get("title") or "Untitled historical bug"
     description = bug.get("description") or bug.get("full_text") or "No description available."
+    meta = "".join(
+        render_optional_meta(label, bug.get(key))
+        for label, key in (
+            ("Project", "project_name"),
+            ("Priority", "priority"),
+            ("Status", "status"),
+            ("Labels", "labels"),
+            ("Root Cause", "root_cause"),
+            ("Resolution", "resolution"),
+        )
+    )
+    # Emitted as one line: Streamlit runs this through a Markdown parser
+    # first, and an indented HTML block would be treated as a code fence,
+    # which leaks the raw closing tags into the page.
     st.markdown(
-        f"""
-        <article class="result-card">
-            <div class="result-card-header">
-                <span class="match-badge {bug.get("badge_class", "match-low")}">{bug.get("badge_label", "Match")}</span>
-                <strong>Similarity: {bug.get("similarity_percentage", 0)}%</strong>
-            </div>
-            <h3>{index}. {escape_html(title)}</h3>
-            <div class="bug-id">{escape_html(bug.get("bug_id", "Unknown Bug ID"))}</div>
-            <p>{escape_html(shorten(description, 360))}</p>
-            <div class="result-meta">
-                {render_optional_meta("Project", bug.get("project_name"))}
-                {render_optional_meta("Priority", bug.get("priority"))}
-                {render_optional_meta("Status", bug.get("status"))}
-                {render_optional_meta("Labels", bug.get("labels"))}
-                {render_optional_meta("Root Cause", bug.get("root_cause"))}
-                {render_optional_meta("Resolution", bug.get("resolution"))}
-            </div>
-            {render_match_reasons(bug.get("match_reasons", []))}
-        </article>
-        """,
+        '<article class="result-card">'
+        '<div class="result-card-header">'
+        f'<span class="match-badge {bug.get("badge_class", "match-low")}">'
+        f'{escape_html(bug.get("badge_label", "Match"))}</span>'
+        f'<strong>Similarity: {bug.get("similarity_percentage", 0)}%</strong>'
+        "</div>"
+        f"<h3>{index}. {escape_html(title)}</h3>"
+        f'<div class="bug-id">{escape_html(bug.get("bug_id", "Unknown Bug ID"))}</div>'
+        f"<p>{escape_html(shorten(description, 360))}</p>"
+        f'<div class="result-meta">{meta}</div>'
+        f"{render_match_reasons(bug.get('match_reasons', []))}"
+        "</article>",
         unsafe_allow_html=True,
     )
 
@@ -475,14 +477,12 @@ def render_search_statistics(stats: dict[str, Any]) -> None:
     }
     merged = {**default_stats, **(stats or {})}
     st.markdown(
-        f"""
-        <section class="stats-grid">
-            <div><span>Historical Bugs</span><strong>{int(merged["historical_bugs_indexed"]):,}</strong></div>
-            <div><span>Embedding Model</span><strong>{escape_html(merged["embedding_model"])}</strong></div>
-            <div><span>Vector Database</span><strong>{escape_html(merged["vector_database_status"])}</strong></div>
-            <div><span>Search Time</span><strong>{merged["search_time_seconds"]:.2f} seconds</strong></div>
-        </section>
-        """,
+        '<section class="stats-grid">'
+        f'<div><span>Historical Bugs</span><strong>{int(merged["historical_bugs_indexed"]):,}</strong></div>'
+        f'<div><span>Embedding Model</span><strong>{escape_html(merged["embedding_model"])}</strong></div>'
+        f'<div><span>Vector Database</span><strong>{escape_html(merged["vector_database_status"])}</strong></div>'
+        f'<div><span>Search Time</span><strong>{merged["search_time_seconds"]:.2f} seconds</strong></div>'
+        "</section>",
         unsafe_allow_html=True,
     )
 
@@ -491,12 +491,12 @@ def render_match_reasons(reasons: list[str]) -> str:
     if not reasons:
         return ""
     items = "".join(f"<li>{escape_html(reason)}</li>" for reason in reasons[:4])
-    return f"""
-        <div class="match-reasons">
-            <strong>Why this matched</strong>
-            <ul>{items}</ul>
-        </div>
-    """
+    return (
+        '<div class="match-reasons">'
+        "<strong>Why this matched</strong>"
+        f"<ul>{items}</ul>"
+        "</div>"
+    )
 
 
 def render_optional_meta(label: str, value: Any) -> str:

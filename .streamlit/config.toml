@@ -1,0 +1,20 @@
+# The application is light-only. Without pinning base = "light", Streamlit
+# follows the operating system into dark mode and renders its own widgets
+# (inputs, expanders, dataframes, sidebar) dark underneath the light cards in
+# styles/style.css. These values mirror the --ba-* variables in that file.
+[theme]
+base = "light"
+primaryColor = "#0f766e"
+backgroundColor = "#f7faf9"
+secondaryBackgroundColor = "#f4f8f7"
+textColor = "#10221f"
+
+[browser]
+gatherUsageStats = false
+
+[server]
+# Streamlit's 200 MB default is far larger than any log, trace, or report this
+# app can use -- utils.rag_search caps extraction at 2 MB of text and the
+# parsers read the last 1 MB. Rejecting an oversized upload at the edge is
+# cheaper and clearer than accepting it and truncating it later.
+maxUploadSize = 25
