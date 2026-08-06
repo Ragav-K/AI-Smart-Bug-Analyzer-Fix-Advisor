@@ -9,7 +9,8 @@
 | Embeddings | Sentence Transformers `all-MiniLM-L6-v2` | Local semantic representation |
 | Vector database | ChromaDB | Persistent local cosine-similarity search |
 | Local fallback | Python counters and cosine similarity | Retrieval without model or index |
-| Document parsing | PyPDF2 and python-docx | Text extraction from uploaded documents |
+| Document parsing | pypdf and python-docx | Text extraction from uploaded documents |
+| Linting | Ruff | PEP 8, import ordering, and static checks (`ruff check .`) |
 | Images | Pillow | Uploaded image handling |
 | Persistence | JSON and local filesystem | Lightweight report and file storage |
 | Testing | Pytest | Unit and integration coverage |

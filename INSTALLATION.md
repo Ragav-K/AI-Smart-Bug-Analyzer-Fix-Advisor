@@ -38,8 +38,9 @@ python -m streamlit run streamlit_app.py
 
 - `streamlit_app.py` is the recommended conventional Streamlit entry point.
 - `app.py` contains the application `main()` function.
-- `run_app.ps1` is a machine-specific convenience script and may need its
-  Python path changed before use.
+- `run_app.ps1` is a Windows convenience script. It uses the interpreter on
+  PATH by default and accepts `-Python` and `-Port`, for example
+  `.un_app.ps1 -Python "C:\Python311\python.exe" -Port 8502`.
 
 ## Optional semantic-search setup
 
@@ -48,12 +49,20 @@ prevents an interactive request from waiting on a model download. If the model
 is not already present in the local Hugging Face cache, the app uses local token
 similarity instead.
 
-To build a persistent Chroma index, make the model available locally and call
-the index builder from the repository root:
+To build a persistent Chroma index, make the model available locally:
 
 ```powershell
-python -c "from utils.rag_search import get_vector_collection; c = get_vector_collection(); print(c.count())"
+python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 ```
+
+Then build the index from the repository root:
+
+```powershell
+python scripts/build_index.py
+```
+
+Use `--rebuild` to re-embed an existing index. Indexing takes several minutes
+and is deliberately kept out of the interactive path.
 
 Generated index files are stored under `data/chroma_gitbugs/` and are ignored by
 Git.
