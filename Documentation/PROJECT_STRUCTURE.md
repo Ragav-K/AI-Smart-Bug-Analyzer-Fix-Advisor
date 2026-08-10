@@ -4,7 +4,8 @@
 .
 |-- agents/                 Five single-responsibility analysis agents
 |-- data/                   Local reports and generated Chroma indexes
-|-- evaluation/             Agent evaluation runner and reports
+|-- Documentation/          Project guides, reports, and milestone records
+|-- evaluation/             Agent evaluation runners and machine-readable reports
 |-- gitbugs/                Historical defect datasets
 |-- gitbugs/samples/        Committed knowledge base (regenerable)
 |-- gitbugs/learned/        Confirmed fixes written back from resolved bugs

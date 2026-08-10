@@ -634,8 +634,13 @@ def validate(
     dataset_sizes: tuple[int, ...] = DATASET_SIZES,
 ) -> dict[str, Any]:
     """Run every case at every dataset size and write the reports."""
+    documentation_dir = (
+        output_dir if output_dir is not None
+        else ROOT_DIR / "Documentation" / "evaluation"
+    )
     output_dir = output_dir or Path(__file__).resolve().parent
     output_dir.mkdir(parents=True, exist_ok=True)
+    documentation_dir.mkdir(parents=True, exist_ok=True)
 
     cases = build_cases()
     all_outcomes: list[CaseOutcome] = []
@@ -691,7 +696,7 @@ def validate(
         ),
         encoding="utf-8",
     )
-    (output_dir / "milestone4_e2e_validation.md").write_text(
+    (documentation_dir / "milestone4_e2e_validation.md").write_text(
         build_markdown_report(report, all_outcomes), encoding="utf-8"
     )
     return report
@@ -848,7 +853,7 @@ python evaluation/end_to_end_validation.py
 
 Artifacts:
 
-- `evaluation/milestone4_e2e_validation.md`
+- `Documentation/evaluation/milestone4_e2e_validation.md`
 - `evaluation/milestone4_e2e_report.json`
 
 ## Limitations
@@ -865,7 +870,7 @@ production reports.
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parent)
+    parser.add_argument("--output-dir", type=Path)
     parser.add_argument(
         "--dataset-sizes",
         type=int,

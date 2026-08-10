@@ -46,7 +46,7 @@ The evaluation runner writes:
 
 - `evaluation/evaluation_report.json`
 - `evaluation/evaluation_report.csv`
-- `evaluation/evaluation_summary.md`
+- `Documentation/evaluation/evaluation_summary.md`
 
 ## End-to-end validation
 
@@ -58,7 +58,7 @@ Runs 12 labelled submissions across 4 historical dataset sizes (48 pipeline
 runs) and scores agent accuracy, duplicate precision/recall/F1 against planted
 ground truth, and recommendation relevance. It writes:
 
-- `evaluation/milestone4_e2e_validation.md`
+- `Documentation/evaluation/milestone4_e2e_validation.md`
 - `evaluation/milestone4_e2e_report.json`
 
 ## Demonstration
@@ -67,7 +67,7 @@ ground truth, and recommendation relevance. It writes:
 python scripts/demo_milestone4.py
 ```
 
-Writes `evaluation/milestone4_demo_report.md`. It does not modify
+Writes `Documentation/evaluation/milestone4_demo_report.md`. It does not modify
 `data/bug_reports.json`; undo its knowledge base write with
 `python scripts/demo_milestone4.py --cleanup`.
 

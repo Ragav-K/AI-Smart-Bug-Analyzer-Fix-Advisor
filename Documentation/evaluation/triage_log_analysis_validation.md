@@ -131,9 +131,9 @@ python evaluation/evaluate_agents.py
 
 Generated artifacts:
 
-- `evaluation/triage_log_analysis_validation.md`
+- `Documentation/evaluation/triage_log_analysis_validation.md`
 - `evaluation/evaluation_report.json`
 - `evaluation/evaluation_report.csv`
-- `evaluation/evaluation_summary.md`
+- `Documentation/evaluation/evaluation_summary.md`
 
 Generated at: `2026-08-05T13:43:17.953927+00:00`

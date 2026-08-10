@@ -13,7 +13,7 @@ demonstrates the two Milestone 4 capabilities on top of it:
     python scripts/demo_milestone4.py
     python scripts/demo_milestone4.py --cleanup   # undo the knowledge base write
 
-The demo writes `evaluation/milestone4_demo_report.md` and prints a transcript.
+The demo writes `Documentation/evaluation/milestone4_demo_report.md` and prints a transcript.
 It does not touch `data/bug_reports.json`.
 """
 
@@ -39,7 +39,7 @@ from utils.rag_search import (  # noqa: E402
     load_embedding_model,
 )
 
-REPORT_PATH = ROOT_DIR / "evaluation" / "milestone4_demo_report.md"
+REPORT_PATH = ROOT_DIR / "Documentation" / "evaluation" / "milestone4_demo_report.md"
 
 JAVA_LOGIN_TRACE = """2026-08-05 09:14:22,502 ERROR [http-nio-8080-exec-4] LoginController - Unhandled exception during login
 java.lang.NullPointerException: Cannot invoke "com.app.model.User.getRole()" because "user" is null

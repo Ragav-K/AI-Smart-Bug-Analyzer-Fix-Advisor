@@ -110,7 +110,7 @@ python evaluation/end_to_end_validation.py
 
 Artifacts:
 
-- `evaluation/milestone4_e2e_validation.md`
+- `Documentation/evaluation/milestone4_e2e_validation.md`
 - `evaluation/milestone4_e2e_report.json`
 
 ## Limitations

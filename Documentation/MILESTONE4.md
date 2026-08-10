@@ -9,7 +9,7 @@ against them, the defects that validation uncovered, and the demonstration.
 | Defect pattern analytics module | `agents/pattern_analytics_agent.py`, `utils/defect_analytics.py`, `models/analytics_models.py`, `ui/analytics.py` | `tests/test_milestone4_analytics.py` (14 tests) |
 | Knowledge base growth mechanism | `utils/knowledge_base.py`, `ui/analytics.py`, `utils/storage.py` | `tests/test_milestone4_knowledge_base.py` (18 tests) |
 | End-to-end testing | `evaluation/end_to_end_validation.py` | `tests/test_milestone4_end_to_end.py` (16 tests) |
-| Documentation, report, demonstration | this document, `scripts/demo_milestone4.py` | `evaluation/milestone4_demo_report.md` |
+| Documentation, report, demonstration | this document, `scripts/demo_milestone4.py` | `Documentation/evaluation/milestone4_demo_report.md` |
 
 ---
 
@@ -248,7 +248,7 @@ Two further defects were found by the demonstration rather than the harness:
 python evaluation/end_to_end_validation.py
 ```
 
-Artifacts: `evaluation/milestone4_e2e_validation.md`,
+Artifacts: `Documentation/evaluation/milestone4_e2e_validation.md`,
 `evaluation/milestone4_e2e_report.json`.
 
 ### Limitations
@@ -270,7 +270,7 @@ python scripts/demo_milestone4.py
 
 Five distinct submissions run through the complete pipeline, followed by the
 growth and analytics demonstrations. The transcript is written to
-`evaluation/milestone4_demo_report.md`. The demo does not touch
+`Documentation/evaluation/milestone4_demo_report.md`. The demo does not touch
 `data/bug_reports.json`; undo its knowledge base write with
 `python scripts/demo_milestone4.py --cleanup`.
 

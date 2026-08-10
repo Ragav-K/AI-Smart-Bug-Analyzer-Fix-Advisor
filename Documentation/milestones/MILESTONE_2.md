@@ -227,7 +227,7 @@ complete normally.
 - Triage and Log Analysis agents with typed Pydantic contracts
 - Fault-isolated orchestrator with structured error metadata and shared retrieval
 - 60-report evaluation harness producing CSV, JSON, and Markdown reports
-- Validation write-up: `evaluation/triage_log_analysis_validation.md`
+- Validation write-up: `Documentation/evaluation/triage_log_analysis_validation.md`
 - Structured JSON logging across all agents
 
 ---

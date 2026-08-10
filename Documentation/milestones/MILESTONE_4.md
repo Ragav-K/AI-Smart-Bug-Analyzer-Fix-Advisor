@@ -241,7 +241,7 @@ lower bounds.
 ## 6. Demonstration
 
 `python scripts/demo_milestone4.py` processes five distinct submissions and
-generates `evaluation/milestone4_demo_report.md`.
+generates `Documentation/evaluation/milestone4_demo_report.md`.
 
 | ID | Bug | Language | Triage | Failure point | Overall |
 |---|---|---|---|---|---:|
@@ -287,8 +287,8 @@ distribution.
 
 - Defect pattern analytics with rule-based systemic issue detection
 - Knowledge base growth with immediate semantic retrievability on both backends
-- 48-run end-to-end validation report: `evaluation/milestone4_e2e_validation.md`
-- Five-submission demonstration report: `evaluation/milestone4_demo_report.md`
+- 48-run end-to-end validation report: `Documentation/evaluation/milestone4_e2e_validation.md`
+- Five-submission demonstration report: `Documentation/evaluation/milestone4_demo_report.md`
 - Technical documentation: `MILESTONE4.md`, `DEVELOPER_GUIDE.md`, `TESTING.md`
 - Project milestone report: `PROJECT_MILESTONES.md` and this milestone set
 - Production-readiness audit with all findings remediated

@@ -84,26 +84,26 @@ flowchart LR
 
 | Document | Purpose |
 |---|---|
-| [**Project milestone report**](PROJECT_MILESTONES.md) | **Complete four-milestone report: architecture, implementation, testing, and demonstration** |
-| [Milestone 1](milestones/MILESTONE_1.md) | Foundation, bug submission, and historical knowledge base |
-| [Milestone 2](milestones/MILESTONE_2.md) | Triage agent, log analysis agent, and orchestration |
-| [Milestone 3](milestones/MILESTONE_3.md) | Root cause, duplicate detection, remediation, and findings |
-| [Milestone 4 report](milestones/MILESTONE_4.md) | Pattern analytics, knowledge base growth, and validation |
-| [Installation](INSTALLATION.md) | Environment setup and application startup |
-| [Usage](USAGE.md) | Submission workflow and result interpretation |
-| [Project structure](PROJECT_STRUCTURE.md) | Repository layout and module responsibilities |
-| [System architecture](system-architecture.md) | Runtime components and data flow |
-| [Multi-agent design](multi-agent-design.md) | Agent contracts and fault isolation |
-| [Milestone 4](MILESTONE4.md) | Defect pattern analytics, knowledge base growth, and end-to-end validation |
-| [RAG pipeline](rag-pipeline.md) | Historical-defect retrieval behavior |
-| [Datasets](DATASETS.md) | Dataset formats, storage, and Git policy |
-| [Tech stack](tech-stack.md) | Technologies actually used by the project |
-| [Testing](TESTING.md) | Unit tests and evaluation suite |
-| [Developer guide](DEVELOPER_GUIDE.md) | Agent extension, schemas, and quality workflow |
-| [Troubleshooting](TROUBLESHOOTING.md) | Common setup and runtime problems |
-| [Roadmap](ROADMAP.md) | Planned improvements |
-| [Security](SECURITY.md) | Vulnerability reporting and data-handling notes |
-| [Changelog](CHANGELOG.md) | Notable project changes |
+| [**Project milestone report**](Documentation/PROJECT_MILESTONES.md) | **Complete four-milestone report: architecture, implementation, testing, and demonstration** |
+| [Milestone 1](Documentation/milestones/MILESTONE_1.md) | Foundation, bug submission, and historical knowledge base |
+| [Milestone 2](Documentation/milestones/MILESTONE_2.md) | Triage agent, log analysis agent, and orchestration |
+| [Milestone 3](Documentation/milestones/MILESTONE_3.md) | Root cause, duplicate detection, remediation, and findings |
+| [Milestone 4 report](Documentation/milestones/MILESTONE_4.md) | Pattern analytics, knowledge base growth, and validation |
+| [Installation](Documentation/INSTALLATION.md) | Environment setup and application startup |
+| [Usage](Documentation/USAGE.md) | Submission workflow and result interpretation |
+| [Project structure](Documentation/PROJECT_STRUCTURE.md) | Repository layout and module responsibilities |
+| [System architecture](Documentation/system-architecture.md) | Runtime components and data flow |
+| [Multi-agent design](Documentation/multi-agent-design.md) | Agent contracts and fault isolation |
+| [Milestone 4](Documentation/MILESTONE4.md) | Defect pattern analytics, knowledge base growth, and end-to-end validation |
+| [RAG pipeline](Documentation/rag-pipeline.md) | Historical-defect retrieval behavior |
+| [Datasets](Documentation/DATASETS.md) | Dataset formats, storage, and Git policy |
+| [Tech stack](Documentation/tech-stack.md) | Technologies actually used by the project |
+| [Testing](Documentation/TESTING.md) | Unit tests and evaluation suite |
+| [Developer guide](Documentation/DEVELOPER_GUIDE.md) | Agent extension, schemas, and quality workflow |
+| [Troubleshooting](Documentation/TROUBLESHOOTING.md) | Common setup and runtime problems |
+| [Roadmap](Documentation/ROADMAP.md) | Planned improvements |
+| [Security](Documentation/SECURITY.md) | Vulnerability reporting and data-handling notes |
+| [Changelog](Documentation/CHANGELOG.md) | Notable project changes |
 
 ## Runtime data
 
@@ -115,7 +115,7 @@ The following local artifacts are intentionally excluded from Git:
 - full raw files matching `gitbugs/**/*_bugs.csv`
 
 Compact `*-combined.csv` samples are committed for demonstrations and testing.
-See [DATASETS.md](DATASETS.md) before adding new datasets.
+See [DATASETS.md](Documentation/DATASETS.md) before adding new datasets.
 
 ## Tests
 

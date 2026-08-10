@@ -121,8 +121,13 @@ def build_submission(case: EvaluationCase) -> dict | str:
 
 
 def evaluate(output_dir: Path | None = None) -> dict:
+    documentation_dir = (
+        output_dir if output_dir is not None
+        else ROOT_DIR / "Documentation" / "evaluation"
+    )
     output_dir = output_dir or Path(__file__).resolve().parent
     output_dir.mkdir(parents=True, exist_ok=True)
+    documentation_dir.mkdir(parents=True, exist_ok=True)
     orchestrator = BugAnalysisOrchestrator()
     rows: list[dict] = []
     for case in build_seed_dataset():
@@ -175,8 +180,8 @@ def evaluate(output_dir: Path | None = None) -> dict:
     summary = "# Agent Evaluation Summary\n\n" + "\n".join(
         f"- **{key.replace('_', ' ').title()}:** {value}" for key, value in report.items()
     ) + "\n"
-    (output_dir / "evaluation_summary.md").write_text(summary, encoding="utf-8")
-    (output_dir / "triage_log_analysis_validation.md").write_text(
+    (documentation_dir / "evaluation_summary.md").write_text(summary, encoding="utf-8")
+    (documentation_dir / "triage_log_analysis_validation.md").write_text(
         build_markdown_report(report, rows),
         encoding="utf-8",
     )
@@ -348,10 +353,10 @@ python evaluation/evaluate_agents.py
 
 Generated artifacts:
 
-- `evaluation/triage_log_analysis_validation.md`
+- `Documentation/evaluation/triage_log_analysis_validation.md`
 - `evaluation/evaluation_report.json`
 - `evaluation/evaluation_report.csv`
-- `evaluation/evaluation_summary.md`
+- `Documentation/evaluation/evaluation_summary.md`
 
 Generated at: `{report['generated_at']}`
 """
@@ -359,7 +364,7 @@ Generated at: `{report['generated_at']}`
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parent)
+    parser.add_argument("--output-dir", type=Path)
     args = parser.parse_args()
     print(json.dumps(evaluate(args.output_dir), indent=2))
 

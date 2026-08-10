@@ -339,7 +339,7 @@ empty/whitespace/`None` inputs returning a warning rather than raising.
 - Triage and Log Analysis agents with typed Pydantic contracts
 - Fault-isolated orchestrator with structured error metadata
 - 60-report evaluation harness with CSV, JSON, and Markdown reports
-- Validation write-up: `evaluation/triage_log_analysis_validation.md`
+- Validation write-up: `Documentation/evaluation/triage_log_analysis_validation.md`
 
 ## Challenges
 
@@ -653,7 +653,7 @@ key-value, and unrecognised formats, at four corpus sizes.
 ## Demonstration
 
 `python scripts/demo_milestone4.py` processes five distinct submissions through
-the complete pipeline and generates `evaluation/milestone4_demo_report.md`.
+the complete pipeline and generates `Documentation/evaluation/milestone4_demo_report.md`.
 
 ### The five submissions
 
