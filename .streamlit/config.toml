@@ -4,10 +4,10 @@
 # styles/style.css. These values mirror the --ba-* variables in that file.
 [theme]
 base = "light"
-primaryColor = "#0f766e"
-backgroundColor = "#f7faf9"
-secondaryBackgroundColor = "#f4f8f7"
-textColor = "#10221f"
+primaryColor = "#1d4ed8"
+backgroundColor = "#f7f9fd"
+secondaryBackgroundColor = "#f4f7fd"
+textColor = "#111a2e"
 
 [browser]
 gatherUsageStats = false
